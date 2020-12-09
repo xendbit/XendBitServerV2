@@ -1,54 +1,67 @@
-import { Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { AddressMapping } from "./address.mapping.entity";
 
 @Entity({ name: "XB_USER" })
-@Unique("xb_user_uniq", ["email", "phone_number", "bank_account_number"])
+@Unique("xb_user_email_uniq", ["email"])
+@Unique("xb_user_phone_uniq", ["phoneNumber"])
+@Unique("xb_user_bank_account_numer_uniq", ["bankAccountNumber"])
 export class User {
     @PrimaryGeneratedColumn()
-    id: number;
+    id?: number;
     @Column()
     email: string;
     @Column()
-    password: string;
+    password?: string;
+    @Column({name: "fullname"})
+    fullName: string;
+    @Column({name: "firstname"})
+    firstName: string;
+    @Column({name: "middlename"})
+    middleName: string;
+    @Column({name: "surname"})
+    surName: string;
+    @Column({name: "account_type"})
+    accountType: string;
+    @Column({name: "is_activated"})
+    isActivated: boolean;
+    @Column({name: "is_beneficiary"})
+    isBeneficiary: boolean;
+    @Column({name: "enable_whatsapp"})
+    enableWhatsapp: boolean;
+    @Column({name: "is_approved"})
+    isApproved: boolean;
+    @Column({name: "wallet_type"})
+    walletType: string;
+    @Column({name: "date_registered"})
+    dateRegistered: number;
+    @Column({name: "xend_network_address"})
+    xendNetworkAddress?: string;
     @Column()
-    full_name: string;
+    hash?: string;
+    @Column({name: "referral_code"})
+    referralCode?: string;
     @Column()
-    account_type: string;
-    @Column()
-    is_activated: boolean;
-    @Column()
-    is_beneficiary: boolean;
-    @Column()
-    enable_whatsapp: boolean;
-    @Column()
-    is_approved: boolean;
-    @Column()
-    wallet_type: string;
-    @Column()
-    date_registered: number;
-    @Column()
-    xend_network_address: string;
-    @Column()
-    hash: string;
-    @Column()
-    referral_code: string;
-    @Column()
-    agent_id: number;
-    @Column()
-    passphrase: string;
-    @Column()
-    phone_number: string;
-    @Column()
-    id_image: string;
-    @Column()
-    ngnc_account_number: string;
-    @Column()
-    ngnc_bank: string;
-    @Column()
-    bank_account_name: string;
-    @Column()
-    bank_account_number: string;
-    @Column()
-    bank_name: string;    
-    @Column()
-    bank_code: string;    
+    passphrase?: string;
+    @Column({name: "phone_number"})
+    phoneNumber: string;
+    @Column({name: "id_image"})    
+    idImage: string;
+    @Column({name: "id_type"})    
+    idType: string;
+    @Column({name: "id_number"})    
+    idNumber: string;            
+    @Column({name: "ngnc_account_number"})
+    ngncAccountNumber?: string;
+    @Column({name: "ngnc_bank"})
+    ngncBank?: string;
+    @Column({name: "bank_account_name"})
+    bankAccountName?: string;
+    @Column({name: "bank_account_number"})
+    bankAccountNumber: string;
+    @Column({name: "bank_name"})
+    bankName: string;    
+    @Column({name: "bank_code"})
+    bankCode: string;    
+    @OneToMany(type => AddressMapping, addressMapping => addressMapping.user)    
+    addressMappings?: AddressMapping[]
 }
