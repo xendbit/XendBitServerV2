@@ -13,7 +13,7 @@ export class Config {
             "xendchain.url": "https://lb.xendbit.net/geth",
             "ngnc.contract.address": "0x61f67f8902650f4baf783bdf85264175326589e3",
             "contractor": "0xC04915f6b3ff85b50A863eB1FcBF368171539413",
-            "email.confirmation.url": "https://xendfilb.xendbit.net/api/activateaccount",
+            "email.confirmation.url": "https://xendfilb.xendbit.net/api/user/confirm-email",
             "BTC": {
                 "min.xend.fees": 5.0,
                 "min.block.fees": 0.00005,
