@@ -12,7 +12,7 @@ export class EmailService {
 
     async sendConfirmationEmail(dbUser: User) {
         let content = readFileSync('/etc/xendbit/confirmation_email.html', 'utf8');
-        const link =  this.config.p["email.confirmation.url"] + "/" + AES.encrypt(dbUser.email, process.env.KEY).toString();
+        const link =  this.config.p["email.confirmation.url"] + "/" + Buffer.from(AES.encrypt(dbUser.email, process.env.KEY).toString()).toString('base64');
         const name = dbUser.fullName;
         content = content.replace("#link", link).replace("#name", name).replace('#link', link);
         this.logger.debug(content);

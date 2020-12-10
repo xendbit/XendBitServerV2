@@ -44,7 +44,10 @@ export class UserService {
     }
 
     async confirmEmail(tag: string): Promise<string> {
-        const email = AES.decrypt(tag, process.env.KEY).toString(enc.Utf8);
+        const email = AES.decrypt(Buffer.from(tag, 'base64').toString('ascii'), process.env.KEY).toString(enc.Utf8)
+        console.log(email);
+        this.logger.debug(email);
+        
         let dbUser = await this.findByColumn("EMAIL", email);
 
         if(dbUser !== null) {

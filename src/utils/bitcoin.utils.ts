@@ -4,11 +4,21 @@ import { mnemonicToSeedSync } from 'bip39';
 import { Config } from './config';
 import { AES } from "crypto-js";
 import { Injectable } from "@nestjs/common";
+import { ImportPrivKeyParams, RPCClient } from 'rpc-bitcoin';
 
 @Injectable()
 export class BitcoinUtils {
 
-    constructor(private config: Config) {}
+    client: RPCClient;
+
+    constructor(private config: Config) {
+        const url = this.config.p["bitcoin.url"];
+        const user = process.env.BITCOIN_RPC_USER;
+        const pass = process.env.BITCOIN_RPC_PASS;
+        const port = this.config.p["bitcoin.port"];
+        const timeout = this.config.p["bitcoin.timeout"];
+        this.client = new RPCClient({ url, port, timeout, user, pass });        
+    }
 
     getNetwork() {
         if (this.config.p["bitcoin.testnet"]) {
@@ -29,6 +39,17 @@ export class BitcoinUtils {
         // const restored = bip32.fromBase58(strng);
         const address = this.getAddress(node, this.getNetwork());
         const wif = node.toWIF();
+        
+        const params: ImportPrivKeyParams = {
+            privkey: wif,
+            label: address,
+            rescan: false
+        };
+
+        this.client.importprivkey(params).then((x) => {
+            console.log("Imported BTC");
+            console.log(x);
+        });
 
         const encWif = AES.encrypt(wif, process.env.KEY).toString();
         const am: AddressMapping = {

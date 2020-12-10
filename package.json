@@ -42,6 +42,7 @@
     "nodemailer": "^6.4.16",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
+    "rpc-bitcoin": "^2.0.0",
     "rxjs": "^6.6.3",
     "typed-rest-client": "^1.8.0",
     "typeorm": "^0.2.29",
