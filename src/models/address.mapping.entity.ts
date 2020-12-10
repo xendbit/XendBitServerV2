@@ -29,4 +29,5 @@ export class AddressMapping {
     maxXendFees?;
     @Column({name: "perc_xend_fees", type: "float"})
     percXendFees?;
+    fees?;
 }

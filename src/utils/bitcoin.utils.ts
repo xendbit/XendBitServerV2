@@ -47,4 +47,16 @@ export class BitcoinUtils {
 
         return am;
     }
+
+    getFees(am: AddressMapping) {
+        return {
+            minXendFees: am.minXendFees,            
+            minBlockFees: am.minBlockFees,
+            externalDepositFees: am.externalDepositFees,
+            percExternalTradingFees: am.percExternalTradingFees,
+            externalWithdrawalFees: am.externalWithdrawalFees,
+            maxXendFees: am.maxXendFees,
+            percXendFees: am.percXendFees
+        }
+    }
 }

@@ -1,5 +1,3 @@
-import { User } from "../user.entity";
-
 export class UserRequestObject {
     accountNumber: string;
     accountType: string;

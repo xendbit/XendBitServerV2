@@ -16,6 +16,7 @@ import { AddressMapping } from './models/address.mapping.entity';
 import { BitcoinUtils } from './utils/bitcoin.utils';
 import { EthereumUtils } from './utils/ethereum.utils';
 import { Config } from './utils/config';
+import { XendChainUtils } from './utils/xendchain.utils';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { Config } from './utils/config';
     ProvidusBankService,
     BitcoinUtils,
     EthereumUtils,
-    Config
+    Config,
+    XendChainUtils
   ],
 })
 export class AppModule { }

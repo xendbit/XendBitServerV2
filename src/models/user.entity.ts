@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { AddressMapping } from "./address.mapping.entity";
 
 @Entity({ name: "XB_USER" })
@@ -22,13 +22,13 @@ export class User {
     surName: string;
     @Column({name: "account_type"})
     accountType: string;
-    @Column({name: "is_activated"})
+    @Column({name: "is_activated", type: 'tinyint', width: 1})
     isActivated: boolean;
-    @Column({name: "is_beneficiary"})
+    @Column({name: "is_beneficiary", type: 'tinyint', width: 1})
     isBeneficiary: boolean;
-    @Column({name: "enable_whatsapp"})
+    @Column({name: "enable_whatsapp", type: 'tinyint', width: 1})
     enableWhatsapp: boolean;
-    @Column({name: "is_approved"})
+    @Column({name: "is_approved", type: 'tinyint', width: 1})
     isApproved: boolean;
     @Column({name: "wallet_type"})
     walletType: string;
@@ -63,5 +63,7 @@ export class User {
     @Column({name: "bank_code"})
     bankCode: string;    
     @OneToMany(type => AddressMapping, addressMapping => addressMapping.user)    
+    @JoinColumn()
     addressMappings?: AddressMapping[]
+    ngncBalance?: number;
 }

@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { genSaltSync, hashSync } from 'bcrypt';
+import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { HmacSHA256 } from 'crypto-js';
 import { AddressMapping } from 'src/models/address.mapping.entity';
+import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
 import { User } from 'src/models/user.entity';
 import { BitcoinUtils } from 'src/utils/bitcoin.utils';
 import { EthereumUtils } from 'src/utils/ethereum.utils';
+import { XendChainUtils } from 'src/utils/xendchain.utils';
 import { Repository } from 'typeorm';
 import { MoneyWaveService } from '../money-wave/money-wave.service';
 import { ProvidusBankService } from '../providus-bank/providus-bank.service';
@@ -18,9 +20,10 @@ export class UserService {
         @InjectRepository(User) private userRepo: Repository<User>,
         @InjectRepository(AddressMapping) private amRepo: Repository<AddressMapping>,
         private moneywaveService: MoneyWaveService,
-        private providusService: ProvidusBankService,        
+        private providusService: ProvidusBankService,
         private btcUtils: BitcoinUtils,
-        private ethUtils: EthereumUtils,        
+        private ethUtils: EthereumUtils,
+        private xendUtils: XendChainUtils
     ) { }
 
     async findByColumn(col: string, val: string): Promise<User> {
@@ -29,7 +32,7 @@ export class UserService {
             const dbUsersList = await this.userRepo.query(query, [val]);
             if (dbUsersList.length === 1) {
                 return dbUsersList[0];
-            } if(dbUsersList.length > 1) {
+            } if (dbUsersList.length > 1) {
                 throw Error(`ResultSet returned more than one (1) rows: [${dbUsersList.length}]`)
             }
             return null;
@@ -38,10 +41,55 @@ export class UserService {
         }
     }
 
-    async addNewUser(uro: UserRequestObject): Promise<User> {
+    async login(lro: LoginRequestObject): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
-                const salt = genSaltSync(12, 'b');
+                const passphraseHash = HmacSHA256(lro.passphrase, process.env.KEY).toString();
+                let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
+                dbUser = await this.userRepo.findOne(dbUser.id, { relations: ["addressMappings"] });                
+                               
+                if (dbUser === null) {
+                    throw Error("User with email address already not found");
+                }
+
+                if (dbUser.hash !== passphraseHash) {
+                    throw Error("Wallet Data Corrupted. Use the recover button to recover your wallet");
+                }
+
+                if (!compareSync(lro.password, dbUser.password)) {
+                    throw Error("Invalid login details: password");
+                }
+
+                if (!dbUser.isActivated) {
+                    throw Error("Account is not yet activated. Please check your email for instructions on how to activate your account");
+                }
+
+                const ams: AddressMapping[] = [];
+                let ngncAddress;
+                dbUser.addressMappings.forEach(am => {
+                    if (am.chain === 'BTC') {
+                        am.fees = this.btcUtils.getFees(am);
+                    } else if (am.chain === 'ETH') {
+                        ngncAddress = am.chainAddress;
+                        am.fees = this.ethUtils.getFees(am);
+                    }
+
+                    ams.push(am);
+                });
+
+                dbUser.addressMappings = ams;                
+                dbUser.ngncBalance = await this.xendUtils.getNgncBalance(ngncAddress);
+                resolve(dbUser);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    addNewUser(uro: UserRequestObject): Promise<User> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const salt = genSaltSync(12, 'a');
                 const passwordHashed = hashSync(uro.password, salt);
                 const passphraseHash = HmacSHA256(uro.passphrase, process.env.KEY).toString();
 
@@ -98,7 +146,7 @@ export class UserService {
                 dbUser.addressMappings.forEach(am => {
                     am.user = null;
                     ams.push(am);
-                })        
+                })
 
                 dbUser.addressMappings = ams;
                 resolve(dbUser);
@@ -109,7 +157,7 @@ export class UserService {
     }
 
     toUser(uro: UserRequestObject): User {
-        const dr = Math.round(uro.dateRegistered/1000);
+        const dr = Math.round(uro.dateRegistered / 1000);
         const u: User = {
             accountType: uro.accountType,
             bankAccountNumber: uro.accountNumber,
@@ -134,6 +182,11 @@ export class UserService {
         }
 
         return u;
+    }
+
+    getPrivateKey(uro: UserRequestObject) {
+        //const am = this.ethUtils.getEthereumAddress("one two three four five six seven eight nine ten eleven twelve");
+        //this.logger.debug(am);        
     }
 
 }
