@@ -1,6 +1,5 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
-import { AddressMapping } from 'src/models/address.mapping.entity';
 import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
 import { UserService } from 'src/services/user/user.service';
@@ -27,5 +26,10 @@ export class UserController {
         });
 
         return ResponseUtils.getSuccessResponse(user, "Login Successful");
+    }
+
+    @Get('confirm-email/:tag')
+    async confirmEmail(@Param('tag') tag: string) {
+        return await this.userService.confirmEmail(tag);
     }
 }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
-import { HmacSHA256 } from 'crypto-js';
+import { AES, enc, HmacSHA256 } from 'crypto-js';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
@@ -10,6 +10,7 @@ import { BitcoinUtils } from 'src/utils/bitcoin.utils';
 import { EthereumUtils } from 'src/utils/ethereum.utils';
 import { XendChainUtils } from 'src/utils/xendchain.utils';
 import { Repository } from 'typeorm';
+import { EmailService } from '../email/email.service';
 import { MoneyWaveService } from '../money-wave/money-wave.service';
 import { ProvidusBankService } from '../providus-bank/providus-bank.service';
 
@@ -23,7 +24,8 @@ export class UserService {
         private providusService: ProvidusBankService,
         private btcUtils: BitcoinUtils,
         private ethUtils: EthereumUtils,
-        private xendUtils: XendChainUtils
+        private xendUtils: XendChainUtils,
+        private emailService: EmailService,        
     ) { }
 
     async findByColumn(col: string, val: string): Promise<User> {
@@ -41,12 +43,29 @@ export class UserService {
         }
     }
 
+    async confirmEmail(tag: string): Promise<string> {
+        const email = AES.decrypt(tag, process.env.KEY).toString(enc.Utf8);
+        let dbUser = await this.findByColumn("EMAIL", email);
+
+        if(dbUser !== null) {
+            dbUser = await this.userRepo.findOne(dbUser.id, { relations: ["addressMappings"] });                
+            dbUser.isActivated = true;
+            this.userRepo.save(dbUser).then(() => {});
+            return "Email confirmation successful. You can now login on the app";
+        }
+
+        return "Can not find confirmation link.";
+    }
+
     async login(lro: LoginRequestObject): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
                 const passphraseHash = HmacSHA256(lro.passphrase, process.env.KEY).toString();
                 let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
-                dbUser = await this.userRepo.findOne(dbUser.id, { relations: ["addressMappings"] });                
+
+                if(dbUser !== null) {
+                    dbUser = await this.userRepo.findOne(dbUser.id, { relations: ["addressMappings"] });                
+                }
                                
                 if (dbUser === null) {
                     throw Error("User with email address already not found");
@@ -149,6 +168,7 @@ export class UserService {
                 })
 
                 dbUser.addressMappings = ams;
+                this.emailService.sendConfirmationEmail(dbUser).then(() => {});
                 resolve(dbUser);
             } catch (error) {
                 reject(error);

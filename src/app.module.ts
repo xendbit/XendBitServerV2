@@ -17,11 +17,19 @@ import { BitcoinUtils } from './utils/bitcoin.utils';
 import { EthereumUtils } from './utils/ethereum.utils';
 import { Config } from './utils/config';
 import { XendChainUtils } from './utils/xendchain.utils';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { EmailService } from './services/email/email.service';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
     TypeOrmModule.forFeature([Grouplists, User, AddressMapping]),
+    MailerModule.forRoot({  
+      transport: 'smtps://contact@xendbit.com:jugDy4-wygmyh-fintoc@smtp.gmail.com',
+      defaults: {
+        from: '"Contact XendBit" <contact@xendbit.com>',
+      },
+    }),
   ],
   controllers: [AppController, GrouplistsController, UserController],
   providers: [
@@ -37,7 +45,8 @@ import { XendChainUtils } from './utils/xendchain.utils';
     BitcoinUtils,
     EthereumUtils,
     Config,
-    XendChainUtils
+    XendChainUtils,
+    EmailService
   ],
 })
 export class AppModule { }
