@@ -3,14 +3,21 @@ import { mnemonicToSeedSync } from 'bip39';
 import { AES } from 'crypto-js';
 import { hdkey } from 'ethereumjs-wallet';
 import { AddressMapping } from 'src/models/address.mapping.entity';
+import Web3 from 'web3';
 import { Config } from './config';
 import { XendChainUtils } from './xendchain.utils';
 
 @Injectable()
 export class EthereumUtils {
     private readonly logger = new Logger(EthereumUtils.name);
+    web3: Web3;
 
     constructor(private config: Config, private xendChain: XendChainUtils) {
+        this.web3 = new Web3(this.config.p["ethereum.server.url"]);
+    }
+
+    async getBalance(address: string): Promise<number> {
+        return this.web3.eth.getBalance(address);
     }
 
     getEthereumAddress(passphrase: string): AddressMapping {

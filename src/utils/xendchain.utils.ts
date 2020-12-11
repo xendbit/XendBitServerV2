@@ -12,7 +12,7 @@ export class XendChainUtils {
     contractorPassword;
 
     constructor(private config: Config) {
-        this.web3 = new Web3(this.config.p["xendchain.url"]);
+        this.web3 = new Web3(this.config.p["xendchain.server.url"]);
         this.erc20Abi = this.config.erc20Abi;
         this.ngncContractAddress = this.config.p["ngnc.contract.address"];
         this.ngncContract = new this.web3.eth.Contract(this.erc20Abi, this.ngncContractAddress);
@@ -35,8 +35,8 @@ export class XendChainUtils {
     async importPrivateKey(pk: string) {
         try {
             await this.web3.eth.personal.importRawKey(pk.replace('0x', ''), process.env.KEY_IMPORT_PASSWORD);
-        } catch (error) {
-            console.log(error);
+        } catch (_error) {
+            
         }
     }
 }

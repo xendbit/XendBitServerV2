@@ -16,18 +16,18 @@ export class AddressMapping {
     @ManyToOne(type => User, user => user.addressMappings)    
     user?: User;
     @Column({name: "min_xend_fees", type: "float"})
-    minXendFees?;
+    minXendFees?: number;
     @Column({name: "min_block_fees", type: "float"})
-    minBlockFees?;
+    minBlockFees?: number;
     @Column({name: "external_deposit_fees", type: "float"})
-    externalDepositFees?;
+    externalDepositFees?: number;
     @Column({name: "perc_external_trading_fees", type: "float"})
-    percExternalTradingFees?;
+    percExternalTradingFees?: number;
     @Column({name: "external_withdrawal_fees", type: "float"})
-    externalWithdrawalFees?;
+    externalWithdrawalFees?: number;
     @Column({name: "max_xend_fees", type: "float"})
-    maxXendFees?;
+    maxXendFees?: number;
     @Column({name: "perc_xend_fees", type: "float"})
-    percXendFees?;
+    percXendFees?: number;
     fees?;
 }

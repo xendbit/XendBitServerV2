@@ -4,7 +4,8 @@ import { mnemonicToSeedSync } from 'bip39';
 import { Config } from './config';
 import { AES } from "crypto-js";
 import { Injectable } from "@nestjs/common";
-import { ImportPrivKeyParams, RPCClient } from 'rpc-bitcoin';
+import { ImportPrivKeyParams, ListUnspentParams, RPCClient } from 'rpc-bitcoin';
+import { BitcoinTransaction } from "src/models/bitcoin.transaction";
 
 @Injectable()
 export class BitcoinUtils {
@@ -12,12 +13,12 @@ export class BitcoinUtils {
     client: RPCClient;
 
     constructor(private config: Config) {
-        const url = this.config.p["bitcoin.url"];
+        const url = this.config.p["bitcoin.server.url"];
         const user = process.env.BITCOIN_RPC_USER;
         const pass = process.env.BITCOIN_RPC_PASS;
         const port = this.config.p["bitcoin.port"];
         const timeout = this.config.p["bitcoin.timeout"];
-        this.client = new RPCClient({ url, port, timeout, user, pass });        
+        this.client = new RPCClient({ url, port, timeout, user, pass });
     }
 
     getNetwork() {
@@ -32,6 +33,27 @@ export class BitcoinUtils {
         return payments.p2pkh({ pubkey: node.publicKey, network }).address!;
     }
 
+    async getBalance(addresses: string[]): Promise<number> {
+        const params: ListUnspentParams = {
+            addresses: addresses,
+            maxconf: 999999,
+            minconf: 2
+        };
+
+        const unspents: BitcoinTransaction[] = await this.client.listunspent(params);
+        if(unspents.length == 0) {
+            return 0;
+        }
+        const sum = 0;
+        const balance: number = unspents.map((x: BitcoinTransaction) => {
+            return x.amount;
+        }).reduce((sum: number, x: number) => {
+            return sum += x;
+        })
+
+        return balance;
+    }
+
     getBitcoinAddress(passphrase: string): AddressMapping {
         const seed = mnemonicToSeedSync(passphrase);
         const node = bip32.fromSeed(seed);
@@ -39,7 +61,7 @@ export class BitcoinUtils {
         // const restored = bip32.fromBase58(strng);
         const address = this.getAddress(node, this.getNetwork());
         const wif = node.toWIF();
-        
+
         const params: ImportPrivKeyParams = {
             privkey: wif,
             label: address,
@@ -48,7 +70,6 @@ export class BitcoinUtils {
 
         this.client.importprivkey(params).then((x) => {
             console.log("Imported BTC");
-            console.log(x);
         });
 
         const encWif = AES.encrypt(wif, process.env.KEY).toString();
@@ -71,7 +92,7 @@ export class BitcoinUtils {
 
     getFees(am: AddressMapping) {
         return {
-            minXendFees: am.minXendFees,            
+            minXendFees: am.minXendFees,
             minBlockFees: am.minBlockFees,
             externalDepositFees: am.externalDepositFees,
             percExternalTradingFees: am.percExternalTradingFees,

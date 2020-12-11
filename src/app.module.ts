@@ -19,11 +19,12 @@ import { Config } from './utils/config';
 import { XendChainUtils } from './utils/xendchain.utils';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EmailService } from './services/email/email.service';
+import { Exchange } from './models/exchange.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([Grouplists, User, AddressMapping]),
+    TypeOrmModule.forFeature([Grouplists, User, AddressMapping, Exchange]),
     MailerModule.forRoot({  
       transport: 'smtps://contact@xendbit.com:jugDy4-wygmyh-fintoc@smtp.gmail.com',
       defaults: {
