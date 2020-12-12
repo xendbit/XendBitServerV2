@@ -13,13 +13,17 @@ import { AuthGuard } from './guards/auth.guard';
 import { MoneyWaveService } from './services/money-wave/money-wave.service';
 import { ProvidusBankService } from './services/providus-bank/providus-bank.service';
 import { AddressMapping } from './models/address.mapping.entity';
-import { BitcoinUtils } from './utils/bitcoin.utils';
-import { EthereumUtils } from './utils/ethereum.utils';
-import { Config } from './utils/config';
-import { XendChainUtils } from './utils/xendchain.utils';
+import { BitcoinService } from './services/bitcoin/bitcoin.service';
+import { EthereumService } from './services/ethereum/ethereum.service';
+import { Config } from './services/config/config.service';
+import { XendChainService } from './services/xendchain/xendchain.service';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EmailService } from './services/email/email.service';
 import { Exchange } from './models/exchange.entity';
+import { ImageService } from './services/image/image.service';
+import { ExchangeController } from './controllers/exchange/exchange.controller';
+import { ExchangeService } from './services/exchange/exchange.service';
+import { BinanceService } from './services/binance/binance.service';
 
 @Module({
   imports: [
@@ -32,7 +36,7 @@ import { Exchange } from './models/exchange.entity';
       },
     }),
   ],
-  controllers: [AppController, GrouplistsController, UserController],
+  controllers: [AppController, GrouplistsController, UserController, ExchangeController],
   providers: [
     {
       provide: APP_GUARD,
@@ -43,11 +47,14 @@ import { Exchange } from './models/exchange.entity';
     UserService,
     MoneyWaveService,
     ProvidusBankService,
-    BitcoinUtils,
-    EthereumUtils,
+    BitcoinService,
+    EthereumService,
     Config,
-    XendChainUtils,
-    EmailService
+    XendChainService,
+    EmailService,
+    ImageService,
+    ExchangeService,
+    BinanceService
   ],
 })
 export class AppModule { }

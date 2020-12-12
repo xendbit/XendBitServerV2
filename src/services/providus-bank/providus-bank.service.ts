@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { parse } from 'path';
-import { Config } from 'src/utils/config';
+import { Config } from 'src/services/config/config.service';
 import { HttpClient } from 'typed-rest-client/HttpClient';
 import { IHeaders } from 'typed-rest-client/Interfaces';
 

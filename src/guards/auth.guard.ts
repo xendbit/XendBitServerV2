@@ -11,7 +11,10 @@ export class AuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     const roles = this.reflector.get<string[]>('roles', context.getHandler());
-    const authHeader = context.switchToHttp().getRequest().headers['api-key'];
+    let  authHeader = context.switchToHttp().getRequest().headers['apiKey'];
+    if(authHeader === undefined) {
+      authHeader = context.switchToHttp().getRequest().headers['apikey'];
+    }
     if (!roles) {
       return true;
     } else {
@@ -30,12 +33,12 @@ export class AuthGuard implements CanActivate {
     if (roles.indexOf('all') >= 0) {
       return true;
     }
-    
+
     if (roles.indexOf('admin') >= 0) {
       return decrypted === process.env.AUTH_TOKEN;
     }
 
-    if(roles.indexOf('api') >= 0) {
+    if (roles.indexOf('api') >= 0) {
       return decrypted === process.env.AUTH_TOKEN;
     }
 

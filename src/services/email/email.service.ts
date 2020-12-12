@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AES } from 'crypto-js';
 import { readFileSync } from 'fs';
 import { User } from 'src/models/user.entity';
-import { Config } from 'src/utils/config';
+import { Config } from 'src/services/config/config.service';
 
 @Injectable()
 export class EmailService {

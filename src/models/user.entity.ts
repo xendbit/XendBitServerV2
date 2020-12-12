@@ -44,7 +44,7 @@ export class User {
     passphrase?: string;
     @Column({name: "phone_number"})
     phoneNumber: string;
-    @Column({name: "id_image"})    
+    @Column({name: "id_image", width: 5000})    
     idImage: string;
     @Column({name: "id_type"})    
     idType: string;

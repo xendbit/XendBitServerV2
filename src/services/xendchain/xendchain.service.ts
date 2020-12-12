@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import Web3 from 'web3';
-import { Config } from "./config";
+import { Config } from "../config/config.service";
 
 @Injectable()
-export class XendChainUtils {
+export class XendChainService {
     ngncContract;
     ngncContractAddress;
     web3;

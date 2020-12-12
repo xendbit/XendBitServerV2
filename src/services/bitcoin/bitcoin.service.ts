@@ -1,14 +1,14 @@
 import { AddressMapping } from "src/models/address.mapping.entity";
 import { bip32, payments, networks } from 'bitcoinjs-lib';
 import { mnemonicToSeedSync } from 'bip39';
-import { Config } from './config';
+import { Config } from '../config/config.service';
 import { AES } from "crypto-js";
 import { Injectable } from "@nestjs/common";
 import { ImportPrivKeyParams, ListUnspentParams, RPCClient } from 'rpc-bitcoin';
 import { BitcoinTransaction } from "src/models/bitcoin.transaction";
 
 @Injectable()
-export class BitcoinUtils {
+export class BitcoinService {
 
     client: RPCClient;
 

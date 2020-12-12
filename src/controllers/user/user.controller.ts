@@ -12,20 +12,20 @@ export class UserController {
     @Post('new')
     @Roles('api')
     async newUser(@Body() uro: UserRequestObject): Promise<Response> {
-        const user = await this.userService.addNewUser(uro).catch(error => {
+        const result = await this.userService.addNewUser(uro).catch(error => {
             throw error;
         });
-        return ResponseUtils.getSuccessResponse(user, "User Created Sucessfully");
+        return ResponseUtils.getSuccessResponse(result, "User Created Sucessfully");
     }
 
     @Post('login')
     @Roles('api')
     async login(@Body() lro: LoginRequestObject): Promise<Response> {
-        const user = await this.userService.login(lro).catch(error => {
+        const result = await this.userService.login(lro).catch(error => {
             throw error;
         });
 
-        return ResponseUtils.getSuccessResponse(user, "Login Successful");
+        return ResponseUtils.getSuccessResponse(result, "Login Successful");
     }
 
     @Get('confirm-email/:tag')
@@ -33,10 +33,15 @@ export class UserController {
         return await this.userService.confirmEmail(tag);
     }
 
-    @Post('balance')
-    async balance(@Req() req, @Body() lro: LoginRequestObject): Promise<Response> {
-        const wallet = req.headers['wallet'];
-        const balance = await this.userService.balance(lro, wallet);
+    @Get('balance/:id/:wallet')
+    async balance(@Param("id") id: number, @Param("wallet") wallet: string): Promise<Response> {
+        const balance = await this.userService.balance(id, wallet);
         return ResponseUtils.getSuccessResponse(balance)
     }
+
+    @Get('ngnc-balance/:id')
+    async ngncBalance(@Param("id") id: number): Promise<Response> {
+        const balance = await this.userService.getNgncBalance(id);
+        return ResponseUtils.getSuccessResponse(balance)
+    }    
 }

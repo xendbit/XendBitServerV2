@@ -4,15 +4,15 @@ import { AES } from 'crypto-js';
 import { hdkey } from 'ethereumjs-wallet';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import Web3 from 'web3';
-import { Config } from './config';
-import { XendChainUtils } from './xendchain.utils';
+import { Config } from '../config/config.service';
+import { XendChainService } from '../xendchain/xendchain.service';
 
 @Injectable()
-export class EthereumUtils {
-    private readonly logger = new Logger(EthereumUtils.name);
+export class EthereumService {
+    private readonly logger = new Logger(EthereumService.name);
     web3: Web3;
 
-    constructor(private config: Config, private xendChain: XendChainUtils) {
+    constructor(private config: Config, private xendChain: XendChainService) {
         this.web3 = new Web3(this.config.p["ethereum.server.url"]);
     }
 

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { rejects } from 'assert';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { AES, enc, HmacSHA256 } from 'crypto-js';
 import { AddressMapping } from 'src/models/address.mapping.entity';
@@ -7,11 +8,12 @@ import { Exchange } from 'src/models/exchange.entity';
 import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
 import { User } from 'src/models/user.entity';
-import { BitcoinUtils } from 'src/utils/bitcoin.utils';
-import { EthereumUtils } from 'src/utils/ethereum.utils';
-import { XendChainUtils } from 'src/utils/xendchain.utils';
-import { FindManyOptions, Repository } from 'typeorm';
+import { BitcoinService } from 'src/services/bitcoin/bitcoin.service';
+import { EthereumService } from 'src/services/ethereum/ethereum.service';
+import { XendChainService } from 'src/services/xendchain/xendchain.service';
+import { Repository } from 'typeorm';
 import { EmailService } from '../email/email.service';
+import { ImageService } from '../image/image.service';
 import { MoneyWaveService } from '../money-wave/money-wave.service';
 import { ProvidusBankService } from '../providus-bank/providus-bank.service';
 
@@ -24,10 +26,11 @@ export class UserService {
         @InjectRepository(Exchange) private exchangeRepo: Repository<Exchange>,
         private moneywaveService: MoneyWaveService,
         private providusService: ProvidusBankService,
-        private btcUtils: BitcoinUtils,
-        private ethUtils: EthereumUtils,
-        private xendUtils: XendChainUtils,
+        private btcUtils: BitcoinService,
+        private ethUtils: EthereumService,
+        private xendUtils: XendChainService,
         private emailService: EmailService,
+        private imageService: ImageService,
     ) { }
 
     async findByColumn(col: string, val: string): Promise<User> {
@@ -36,24 +39,38 @@ export class UserService {
                 .where(`${col} = :value`, { value: val })
                 .leftJoinAndSelect("user.addressMappings", "addressMappings")
                 .getOne();
-            console.log(user);
             return user;
         } catch (error) {
             throw error;
         }
     }
 
+    async getNgncBalance(id: number): Promise<number> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
+                const ethAddress = user.addressMappings.find((x: AddressMapping) => {
+                    return x.chain === 'ETH';
+                }).chainAddress;
+                const ngncBalance: number = await this.xendUtils.getNgncBalance(ethAddress);
+                resolve(ngncBalance);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     async getEscrow(coin: string, sellerId): Promise<number> {
         const ex = await this.exchangeRepo
             .createQueryBuilder("exchange")
             .where("exchange.active = true")
-            .andWhere("exchange.from_coin = :coin", {coin: coin})
+            .andWhere("exchange.from_coin = :coin", { coin: coin })
             .andWhere("exchange.status IN ('ORDER_PLACED', 'BUYER_PAID')")
             .andWhere("exchange.sellerId = :sellerId", { sellerId: sellerId })
             .leftJoinAndSelect("exchange.seller", "seller")
             .getMany();
 
-        if(ex.length === 0) {
+        if (ex.length === 0) {
             return 0;
         }
 
@@ -64,12 +81,12 @@ export class UserService {
         });
     }
 
-    async balance(lro: LoginRequestObject, wallet: string) {
+    async balance(id: number, wallet: string) {
         return new Promise(async (resolve, reject) => {
             try {
                 let balance = 0;
                 let escrow = 0;
-                const user: User = await this.login(lro);
+                const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
                 switch (wallet) {
                     case 'BTC':
                         const btcAddress = user.addressMappings.find((x: AddressMapping) => {
@@ -81,7 +98,7 @@ export class UserService {
                         break;
                     case 'ETH':
                         const ethAddress = user.addressMappings.find((x: AddressMapping) => {
-                            return x.chain === 'BTC';
+                            return x.chain === 'ETH';
                         }).chainAddress;
                         balance = await this.ethUtils.getBalance(ethAddress);
                         escrow = await this.getEscrow('BTC', user.id);
@@ -89,7 +106,7 @@ export class UserService {
                         break;
                 }
 
-                resolve({balance: balance, escrow: escrow});
+                resolve({ balance: balance, escrow: escrow });
             } catch (error) {
                 reject(error);
             }
@@ -98,11 +115,10 @@ export class UserService {
 
     async confirmEmail(tag: string): Promise<string> {
         const email = AES.decrypt(Buffer.from(tag, 'base64').toString('ascii'), process.env.KEY).toString(enc.Utf8)
-        this.logger.debug(email);
 
         let dbUser = await this.findByColumn("EMAIL", email);
 
-        if (dbUser !== null) {
+        if (dbUser !== undefined) {
             dbUser.isActivated = true;
             this.userRepo.save(dbUser).then(() => { });
             return "Email confirmation successful. You can now login on the app";
@@ -117,7 +133,7 @@ export class UserService {
                 const passphraseHash = HmacSHA256(lro.passphrase, process.env.KEY).toString();
                 let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
 
-                if (dbUser === null) {
+                if (dbUser === undefined) {
                     throw Error("User with email address already not found");
                 }
 
@@ -163,24 +179,21 @@ export class UserService {
                 const passphraseHash = HmacSHA256(uro.passphrase, process.env.KEY).toString();
 
                 let dbUser = await this.findByColumn("EMAIL", uro.emailAddress);
-                if (dbUser !== null) {
+                if (dbUser !== undefined) {
                     // user already exists
-                    const error = Error("User with email address already exists");
-                    throw error;
+                    throw Error("User with email address already exists");
                 }
 
                 dbUser = await this.findByColumn("PHONE_NUMBER", uro.phoneNumber);
-                if (dbUser !== null) {
+                if (dbUser !== undefined) {
                     // user already exists
-                    const error = Error("User with phone number already exists");
-                    throw error;
+                    throw Error("User with phone number already exists");
                 }
 
                 dbUser = await this.findByColumn("bank_account_number", uro.accountNumber);
-                if (dbUser !== null) {
+                if (dbUser !== undefined) {
                     // user already exists
-                    const error = Error("User with account number already exists");
-                    throw error;
+                    throw Error("User with account number already exists");
                 }
 
                 dbUser = this.toUser(uro);
@@ -206,6 +219,7 @@ export class UserService {
                 dbUser.ngncAccountNumber = ngncAccountNumber;
                 dbUser.ngncBank = 'Providus Bank';
 
+                dbUser.idImage = await this.imageService.uploadCustomerIdImage(uro.idImage);
                 dbUser = await this.userRepo.save(dbUser);
                 bitcoinAM.user = dbUser;
                 ethereumAM.user = dbUser;

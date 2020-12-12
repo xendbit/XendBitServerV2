@@ -7,6 +7,7 @@ async function bootstrap() {
     logger: ['error', 'warn', 'debug', 'log', 'verbose'],
   });
 
+  app.enableCors();
   app.setGlobalPrefix('/api');
   app.useGlobalFilters(new ExceptionsFilter());
   await app.listen(process.env.PORT);

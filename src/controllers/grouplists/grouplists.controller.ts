@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { Grouplists } from 'src/models/grouplists.entity';
 import { GenericRequestObject } from 'src/models/request.objects/generic.ro';
 import { GrouplistsService } from 'src/services/grouplists/grouplists.service';
+import { Response, ResponseUtils } from 'src/utils/response.utils';
 
 @Controller('config')
 export class GrouplistsController {
@@ -13,7 +13,7 @@ export class GrouplistsController {
     }
 
     @Post('get-last-word')
-    getLastWord(@Body() gro: GenericRequestObject ): string  {
-        return this.grouplistsService.get13thWord(gro);
+    getLastWord(@Body() gro: GenericRequestObject ): Response  {
+        return ResponseUtils.getSuccessResponse(this.grouplistsService.get13thWord(gro));
     }
 }

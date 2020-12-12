@@ -36,6 +36,7 @@
     "bcrypt": "^5.0.0",
     "bip39": "^3.0.3",
     "bitcoinjs-lib": "^5.2.0",
+    "cloudinary": "^1.23.0",
     "crypto-js": "^4.0.0",
     "ethereumjs-wallet": "^1.0.1",
     "mysql": "^2.18.1",

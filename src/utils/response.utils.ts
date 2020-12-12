@@ -11,7 +11,7 @@ export class ResponseUtils {
 }
 
 export class Response {
-    status;
-    message;
-    data;
+    status: string;
+    message: string;
+    data: any;
 }
