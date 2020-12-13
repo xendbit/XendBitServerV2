@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { ExchangeService } from 'src/services/exchange/exchange.service';
+import { ExchangeService } from 'src/services/exchange.service';
 import { Response, ResponseUtils } from 'src/utils/response.utils';
 
 @Controller('exchange')

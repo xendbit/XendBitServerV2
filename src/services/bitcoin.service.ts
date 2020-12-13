@@ -1,11 +1,12 @@
 import { AddressMapping } from "src/models/address.mapping.entity";
 import { bip32, payments, networks } from 'bitcoinjs-lib';
 import { mnemonicToSeedSync } from 'bip39';
-import { Config } from '../config/config.service';
+import { Config } from './config.service';
 import { AES } from "crypto-js";
 import { Injectable } from "@nestjs/common";
 import { ImportPrivKeyParams, ListUnspentParams, RPCClient } from 'rpc-bitcoin';
 import { BitcoinTransaction } from "src/models/bitcoin.transaction";
+import { WALLET_TYPE } from "src/utils/enums";
 
 @Injectable()
 export class BitcoinService {
@@ -74,7 +75,7 @@ export class BitcoinService {
 
         const encWif = AES.encrypt(wif, process.env.KEY).toString();
         const am: AddressMapping = {
-            chain: 'BTC',
+            chain: WALLET_TYPE.BTC,
             chainAddress: address,
             mnemonicCode: passphrase,
             wif: encWif,

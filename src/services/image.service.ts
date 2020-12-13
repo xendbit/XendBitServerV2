@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UploadApiResponse, v2 } from 'cloudinary';
-import { Config } from 'src/services/config/config.service';
+import { Config } from 'src/services/config.service';
 
 @Injectable()
 export class ImageService {

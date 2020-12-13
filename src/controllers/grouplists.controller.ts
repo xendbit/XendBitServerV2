@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { GenericRequestObject } from 'src/models/request.objects/generic.ro';
-import { GrouplistsService } from 'src/services/grouplists/grouplists.service';
+import { GrouplistsService } from 'src/services/grouplists.service';
 import { Response, ResponseUtils } from 'src/utils/response.utils';
 
 @Controller('config')

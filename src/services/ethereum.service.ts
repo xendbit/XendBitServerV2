@@ -3,9 +3,10 @@ import { mnemonicToSeedSync } from 'bip39';
 import { AES } from 'crypto-js';
 import { hdkey } from 'ethereumjs-wallet';
 import { AddressMapping } from 'src/models/address.mapping.entity';
+import { WALLET_TYPE } from 'src/utils/enums';
 import Web3 from 'web3';
-import { Config } from '../config/config.service';
-import { XendChainService } from '../xendchain/xendchain.service';
+import { Config } from './config.service';
+import { XendChainService } from './xendchain.service';
 
 @Injectable()
 export class EthereumService {
@@ -33,7 +34,7 @@ export class EthereumService {
 
         const encWif = AES.encrypt(addrNode.getWallet().getPrivateKeyString(), process.env.KEY).toString();
         const am: AddressMapping = {
-            chain: 'ETH',
+            chain: WALLET_TYPE.ETH,
             chainAddress: addrNode.getWallet().getAddressString(),
             mnemonicCode: passphrase,
             wif: encWif,

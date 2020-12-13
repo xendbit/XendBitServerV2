@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Grouplists } from 'src/models/grouplists.entity';
 import { GenericRequestObject } from 'src/models/request.objects/generic.ro';
 import { Repository } from 'typeorm';
-import { enc, HmacSHA256, SHA256 } from 'crypto-js';
+import { HmacSHA256 } from 'crypto-js';
 
 @Injectable()
 export class GrouplistsService {

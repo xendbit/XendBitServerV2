@@ -8,22 +8,21 @@ import { Exchange } from 'src/models/exchange.entity';
 import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
 import { User } from 'src/models/user.entity';
-import { BitcoinService } from 'src/services/bitcoin/bitcoin.service';
-import { EthereumService } from 'src/services/ethereum/ethereum.service';
-import { XendChainService } from 'src/services/xendchain/xendchain.service';
+import { BitcoinService } from 'src/services/bitcoin.service';
+import { WALLET_TYPE } from 'src/utils/enums';
 import { Repository } from 'typeorm';
-import { EmailService } from '../email/email.service';
-import { ImageService } from '../image/image.service';
-import { MoneyWaveService } from '../money-wave/money-wave.service';
-import { ProvidusBankService } from '../providus-bank/providus-bank.service';
+import { BlockchainService } from './blockchain.service';
+import { EmailService } from './email.service';
+import { EthereumService } from './ethereum.service';
+import { ImageService } from './image.service';
+import { MoneyWaveService } from './money-wave.service';
+import { ProvidusBankService } from './providus-bank.service';
+import { XendChainService } from './xendchain.service';
 
 @Injectable()
 export class UserService {
     private readonly logger = new Logger(UserService.name);
     constructor(
-        @InjectRepository(User) private userRepo: Repository<User>,
-        @InjectRepository(AddressMapping) private amRepo: Repository<AddressMapping>,
-        @InjectRepository(Exchange) private exchangeRepo: Repository<Exchange>,
         private moneywaveService: MoneyWaveService,
         private providusService: ProvidusBankService,
         private btcUtils: BitcoinService,
@@ -31,6 +30,10 @@ export class UserService {
         private xendUtils: XendChainService,
         private emailService: EmailService,
         private imageService: ImageService,
+        private blockchainService: BlockchainService,
+        @InjectRepository(User) private userRepo: Repository<User>,
+        @InjectRepository(AddressMapping) private amRepo: Repository<AddressMapping>,        
+
     ) { }
 
     async findByColumn(col: string, val: string): Promise<User> {
@@ -60,53 +63,11 @@ export class UserService {
         });
     }
 
-    async getEscrow(coin: string, sellerId): Promise<number> {
-        const ex = await this.exchangeRepo
-            .createQueryBuilder("exchange")
-            .where("exchange.active = true")
-            .andWhere("exchange.from_coin = :coin", { coin: coin })
-            .andWhere("exchange.status IN ('ORDER_PLACED', 'BUYER_PAID')")
-            .andWhere("exchange.sellerId = :sellerId", { sellerId: sellerId })
-            .leftJoinAndSelect("exchange.seller", "seller")
-            .getMany();
-
-        if (ex.length === 0) {
-            return 0;
-        }
-
-        return ex.map((x) => {
-            return x.amountToSell + x.blockFees + x.xendFees;
-        }).reduce((sum: number, x: number) => {
-            return sum += x;
-        });
-    }
-
     async balance(id: number, wallet: string) {
         return new Promise(async (resolve, reject) => {
             try {
-                let balance = 0;
-                let escrow = 0;
                 const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
-                switch (wallet) {
-                    case 'BTC':
-                        const btcAddress = user.addressMappings.find((x: AddressMapping) => {
-                            return x.chain === 'BTC';
-                        }).chainAddress;
-                        balance = await this.btcUtils.getBalance([btcAddress]);
-                        escrow = await this.getEscrow('BTC', user.id);
-                        balance -= escrow;
-                        break;
-                    case 'ETH':
-                        const ethAddress = user.addressMappings.find((x: AddressMapping) => {
-                            return x.chain === 'ETH';
-                        }).chainAddress;
-                        balance = await this.ethUtils.getBalance(ethAddress);
-                        escrow = await this.getEscrow('BTC', user.id);
-                        balance -= escrow;
-                        break;
-                }
-
-                resolve({ balance: balance, escrow: escrow });
+                resolve(this.blockchainService.getBalance(wallet, user));
             } catch (error) {
                 reject(error);
             }
@@ -127,7 +88,34 @@ export class UserService {
         return "Can not find confirmation link.";
     }
 
-    async login(lro: LoginRequestObject): Promise<User> {
+    _loginNoHash(emailAddress: string, password: string): Promise<User> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let dbUser = await this.findByColumn("EMAIL", emailAddress);
+
+                if (dbUser === undefined) {
+                    throw Error("User with email address already not found");
+                }
+
+                if (!compareSync(password, dbUser.password)) {
+                    throw Error("Invalid login details: password");
+                }
+
+                if (!dbUser.isActivated) {
+                    throw Error("Account is not yet activated. Please check your email for instructions on how to activate your account");
+                }
+
+                const ams: AddressMapping[] = [];
+                
+                dbUser.addressMappings = this.blockchainService.getFees(dbUser);
+                resolve(dbUser);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    login(lro: LoginRequestObject): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
                 const passphraseHash = HmacSHA256(lro.passphrase, process.env.KEY).toString();
@@ -150,20 +138,13 @@ export class UserService {
                 }
 
                 const ams: AddressMapping[] = [];
-                let ngncAddress;
-                dbUser.addressMappings.forEach(am => {
-                    if (am.chain === 'BTC') {
-                        am.fees = this.btcUtils.getFees(am);
-                    } else if (am.chain === 'ETH') {
-                        ngncAddress = am.chainAddress;
-                        am.fees = this.ethUtils.getFees(am);
-                    }
 
-                    ams.push(am);
-                });
+                dbUser.addressMappings = this.blockchainService.getFees(dbUser);
+                const ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
+                    return x.chain === WALLET_TYPE.ETH;
+                }).chainAddress;
 
-                dbUser.addressMappings = ams;
-                dbUser.ngncBalance = await this.xendUtils.getNgncBalance(ngncAddress);
+                dbUser.ngncBalance = await this.xendUtils.getNgncBalance(ethAddress);
                 resolve(dbUser);
             } catch (error) {
                 reject(error);

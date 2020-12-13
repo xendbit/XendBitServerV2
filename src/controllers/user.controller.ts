@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
 import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
-import { UserService } from 'src/services/user/user.service';
+import { UserService } from 'src/services/user.service';
 import { Response, ResponseUtils } from 'src/utils/response.utils';
 
 @Controller('user')
