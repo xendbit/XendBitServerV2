@@ -1,17 +1,20 @@
 import { AddressMapping } from "src/models/address.mapping.entity";
-import { bip32, payments, networks } from 'bitcoinjs-lib';
+import { bip32, payments, networks, Psbt, ECPair } from 'bitcoinjs-lib';
 import { mnemonicToSeedSync } from 'bip39';
 import { Config } from './config.service';
-import { AES } from "crypto-js";
-import { Injectable } from "@nestjs/common";
-import { ImportPrivKeyParams, ListUnspentParams, RPCClient } from 'rpc-bitcoin';
+import { AES, enc } from "crypto-js";
+import { Injectable, Logger } from "@nestjs/common";
+import { ImportAddressParams, ImportPrivKeyParams, ListUnspentParams, RPCClient, SendManyParams } from 'rpc-bitcoin';
 import { BitcoinTransaction } from "src/models/bitcoin.transaction";
 import { WALLET_TYPE } from "src/utils/enums";
 
 @Injectable()
 export class BitcoinService {
 
+    private readonly logger = new Logger(BitcoinService.name);
     client: RPCClient;
+    static SATOSHI = 100000000;
+    psbt: Psbt;
 
     constructor(private config: Config) {
         const url = this.config.p["bitcoin.server.url"];
@@ -20,6 +23,100 @@ export class BitcoinService {
         const port = this.config.p["bitcoin.port"];
         const timeout = this.config.p["bitcoin.timeout"];
         this.client = new RPCClient({ url, port, timeout, user, pass });
+    }
+
+    async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                this.psbt = new Psbt({ network: networks.bitcoin });
+                this.psbt.setVersion(2);
+                this.psbt.setLocktime(0);
+        
+                const xendAddress: string = this.config.p.BTC["xend.fees.address"];
+                const requiredAmount: number = amount + xendFees + blockFees;
+
+                const unspents: BitcoinTransaction[] = await this.listUnspent([sender.chainAddress]);
+
+                if (unspents.length == 0) {
+                    throw Error('Insufficient funds');
+                }
+
+                for(let unspent of unspents) {
+                    // get the full hex
+                    this.logger.debug(unspent);
+                    const fullTx = await this.client.gettransaction({ txid: unspent.txid });
+                    const hex = fullTx.hex;                    
+                    this.psbt.addInput({                        
+                        hash: unspent.txid,  // txid number
+                        index: unspent.vout,  // output number
+                        sequence: 0xfffffffe,
+                        nonWitnessUtxo: Buffer.from(hex, 'hex'), // works for witness inputs too!
+                    });
+                }
+
+                this.logger.debug(this.psbt.txInputs);
+
+                const totalUTXO = unspents.map((x: BitcoinTransaction) => {
+                    return x.amount;
+                }).reduce((sum: number, x: number) => {
+                    return sum += x;
+                });
+
+                let change = 0;
+                if (totalUTXO < requiredAmount) {
+                    throw Error('Insufficient funds');
+                } else {
+                    change = totalUTXO - requiredAmount;
+                }
+
+                const changeAddress = sender.chainAddress;
+
+                this.psbt.addOutput({
+                    address: recipient,
+                    value: Math.round(amount * BitcoinService.SATOSHI),
+                });
+
+                this.psbt.addOutput({
+                    address: xendAddress,
+                    value: Math.round(xendFees * BitcoinService.SATOSHI)
+                });
+
+                if (change > 0) {
+                    this.psbt.addOutput({
+                        address: changeAddress,
+                        value: Math.round(change * BitcoinService.SATOSHI)
+                    });
+                }
+
+                unspents.forEach((_unspent, index) => {
+                    this.psbt.signInput(index, ECPair.fromWIF(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8)));
+                });
+
+                const signaturesValid = this.psbt.validateSignaturesOfAllInputs();
+                this.logger.debug('is signatures valid: ' + signaturesValid);
+                this.psbt.finalizeAllInputs();
+
+                const txHex = this.psbt.extractTransaction().toHex();
+                
+                this.logger.debug(txHex);
+                const response = await this.client.sendrawtransaction({hexstring: txHex});                
+                this.logger.debug(response);
+                resolve(response);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    async listUnspent(addresses: string[]): Promise<BitcoinTransaction[]> {
+        const params: ListUnspentParams = {
+            addresses: addresses,
+            maxconf: 999999,
+            minconf: 1
+        };
+
+        const unspents: BitcoinTransaction[] = await this.client.listunspent(params);
+        return unspents;
     }
 
     getNetwork() {
@@ -35,14 +132,8 @@ export class BitcoinService {
     }
 
     async getBalance(addresses: string[]): Promise<number> {
-        const params: ListUnspentParams = {
-            addresses: addresses,
-            maxconf: 999999,
-            minconf: 2
-        };
-
-        const unspents: BitcoinTransaction[] = await this.client.listunspent(params);
-        if(unspents.length == 0) {
+        const unspents: BitcoinTransaction[] = await this.listUnspent(addresses);
+        if (unspents.length == 0) {
             return 0;
         }
         const sum = 0;
@@ -55,6 +146,10 @@ export class BitcoinService {
         return balance;
     }
 
+    decryptWif(encWif: string): string {
+        return AES.decrypt(encWif, process.env.KEY).toString(enc.Utf8);
+    }
+
     getBitcoinAddress(passphrase: string): AddressMapping {
         const seed = mnemonicToSeedSync(passphrase);
         const node = bip32.fromSeed(seed);
@@ -63,13 +158,13 @@ export class BitcoinService {
         const address = this.getAddress(node, this.getNetwork());
         const wif = node.toWIF();
 
-        const params: ImportPrivKeyParams = {
-            privkey: wif,
+        const params: ImportAddressParams = {
+            address: address,
             label: address,
             rescan: false
         };
 
-        this.client.importprivkey(params).then((x) => {
+        this.client.importaddress(params).then((x) => {
             console.log("Imported BTC");
         });
 

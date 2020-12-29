@@ -1,3 +1,4 @@
+import { WALLET_TYPE } from "src/utils/enums";
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user.entity";
 
@@ -5,8 +6,8 @@ import { User } from "./user.entity";
 export class AddressMapping {
     @PrimaryGeneratedColumn()
     id?: number;
-    @Column()
-    chain: string;
+    @Column({type: 'varchar', width: 255})
+    chain: WALLET_TYPE;
     @Column({name: "mnemonic_code"})
     mnemonicCode: string;
     @Column({name: "chain_address"})

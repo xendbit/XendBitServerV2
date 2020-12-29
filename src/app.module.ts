@@ -25,11 +25,12 @@ import { ExchangeService } from './services/exchange.service';
 import { BlockchainService } from './services/blockchain.service';
 import { GrouplistsController } from './controllers/grouplists.controller';
 import { UserController } from './controllers/user.controller';
+import { BinanceOrder } from './models/binance.order.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([Grouplists, User, AddressMapping, Exchange]),
+    TypeOrmModule.forFeature([Grouplists, User, AddressMapping, Exchange, BinanceOrder]),
     MailerModule.forRoot({  
       transport: 'smtps://contact@xendbit.com:jugDy4-wygmyh-fintoc@smtp.gmail.com',
       defaults: {

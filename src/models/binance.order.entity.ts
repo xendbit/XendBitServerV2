@@ -3,9 +3,9 @@ import { SIDE, STATUS } from '../utils/enums';
 import { User } from "./user.entity";
 
 @Entity({name: 'XB_BINANCE_ORDER'})
-export class BinanceOrderEntity {
+export class BinanceOrder {
     @PrimaryGeneratedColumn()
-    id: number;
+    id?: number;
     @Column({name: 'client_id'})
     clientId: string;
     side: SIDE;
@@ -21,8 +21,7 @@ export class BinanceOrderEntity {
     coin: string;
     status: STATUS;
     @Column({name: 'fetched_coin', width: 1, type: 'tinyint'})
-    fetchedCoin: boolean;
+    fetchedCoin?: boolean;
     @Column({ type: "datetime" })
-    fetchCoinDate: Date;
-
+    fetchCoinDate?: Date;
 }

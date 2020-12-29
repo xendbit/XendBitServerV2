@@ -1,3 +1,5 @@
+import { SIDE, WALLET_TYPE } from "src/utils/enums";
+
 export class TradeRequestObject {
     amountToSpend: number;
     xendFees: number;
@@ -6,12 +8,12 @@ export class TradeRequestObject {
     amountToGet: number;
     sellerFromAddress: string;
     sellerToAddress: string;
-    fromCoin: string;
-    toCoin: string;
+    fromCoin: WALLET_TYPE;
+    toCoin: WALLET_TYPE;
     rate: number;
     emailAddress: string
     password: string;
     networkAddress: string
     orderType: string;
-    side: string;    
+    side: SIDE;    
 }

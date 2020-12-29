@@ -21,13 +21,15 @@ export class EthereumService {
         return this.web3.eth.getBalance(address);
     }
 
+    async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<any> {
+                
+    }
+
     getEthereumAddress(passphrase: string): AddressMapping {
         const seed = mnemonicToSeedSync(passphrase);
         const root = hdkey.fromMasterSeed(seed);
         var path = "m/44'/60'/0'/0/0";
-        const addrNode = root.derivePath(path)
-
-        addrNode.privateExtendedKey
+        const addrNode = root.derivePath(path)        
 
         const pk = addrNode.getWallet().getPrivateKeyString();
         this.xendChain.importPrivateKey(pk);

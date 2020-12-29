@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { send } from "process";
 import { AddressMapping } from "src/models/address.mapping.entity";
 import { Exchange } from "src/models/exchange.entity";
 import { User } from "src/models/user.entity";
@@ -15,6 +16,15 @@ export class BlockchainService {
         private ethUtils: EthereumService,
         @InjectRepository(Exchange) private exchangeRepo: Repository<Exchange>,
     ) { }
+
+    async sendToken(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<any> {
+        switch(sender.chain) {
+            case WALLET_TYPE.BTC:                
+                return this.btcUtils.send(sender, recipient, amount, xendFees, blockFees);
+            case WALLET_TYPE.ETH:
+                break;
+        }
+    }
 
     async checkBalance(wallet: string, user: User, compareBalance: number): Promise<boolean> {
         let balance = 0;

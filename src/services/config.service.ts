@@ -21,7 +21,8 @@ export class Config {
             "perc.external.trading.fees": 0.001,
             "max.xend.fees": 100.0,
             "perc.xend.fees": 0.005,
-            "external.withdrawal.fees": 0.0005
+            "external.withdrawal.fees": 0.0005,
+            "xend.fees.address": "16buz7mpfGz1mtfTrRFLkGSEUP6njC8hhX",
         },
         "ETH": {
             "min.xend.fees": 5.0,
@@ -30,7 +31,8 @@ export class Config {
             "perc.external.trading.fees": 0.001,
             "max.xend.fees": 100.0,
             "perc.xend.fees": 0.005,
-            "external.withdrawal.fees": 0.005
+            "external.withdrawal.fees": 0.005,
+            "xend.fees.address": "0xC04915f6b3ff85b50A863eB1FcBF368171539413",
         },
         "cloudinary": {
             cloud_name: 'xendbit',

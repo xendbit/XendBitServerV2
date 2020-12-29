@@ -88,7 +88,7 @@ export class UserService {
         return "Can not find confirmation link.";
     }
 
-    _loginNoHash(emailAddress: string, password: string): Promise<User> {
+    loginNoHash(emailAddress: string, password: string): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
                 let dbUser = await this.findByColumn("EMAIL", emailAddress);
@@ -126,6 +126,8 @@ export class UserService {
                 }
 
                 if (dbUser.hash !== passphraseHash) {
+                    // dbUser.hash = passphraseHash;
+                    // this.userRepo.save(dbUser); 
                     throw Error("Wallet Data Corrupted. Use the recover button to recover your wallet");
                 }
 
