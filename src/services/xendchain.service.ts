@@ -13,7 +13,7 @@ export class XendChainService {
     web3;
     erc20Abi;
 
-    constructor(private config: Config, private ethereumService: EthereumService) {
+    constructor(private config: Config) {
         this.web3 = new Web3(this.config.p["xendchain.server.url"]);
         this.erc20Abi = this.config.erc20Abi;
         this.ngncContractAddress = this.config.p["ngnc.contract.address"];
@@ -79,7 +79,8 @@ export class XendChainService {
                 }
 
                 const transaction = new Transaction(rawTransaction);
-                transaction.sign(this.ethereumService.getAddressFromEncryptedPK(sender.wif).privateKey);
+                const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
+                transaction.sign(pk);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
                 resolve(reciept.transactionHash);
             } catch (error) {

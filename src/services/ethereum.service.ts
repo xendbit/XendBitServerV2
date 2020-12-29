@@ -6,7 +6,6 @@ import { AddressMapping } from 'src/models/address.mapping.entity';
 import { WALLET_TYPE } from 'src/utils/enums';
 import Web3 from 'web3';
 import { Config } from './config.service';
-import { XendChainService } from './xendchain.service';
 import { Transaction, TxData } from 'ethereumjs-tx';
 import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
 
@@ -15,8 +14,9 @@ export class EthereumService {
     private readonly logger = new Logger(EthereumService.name);
     web3: Web3;
 
-    constructor(private config: Config, private xendChain: XendChainService) {
+    constructor(private config: Config) {
         this.web3 = new Web3(this.config.p["ethereum.server.url"]);
+        //this.logger.debug(AES.decrypt('U2FsdGVkX18Y43DB1E5MzYcD6Ga+Pfzr0WM0AN+YqcGdqYd/vsyvw7865v7tZ70xH85x1C4AYFP6LxmI3Pkp3+2TDxZhBv9+EHn3975I9e+ietvUk7PiA/SJeLuQ5EC8', process.env.KEY).toString(enc.Utf8));
     }
 
     async getBalance(address: string): Promise<number> {
@@ -39,7 +39,8 @@ export class EthereumService {
 
 
                 const transaction = new Transaction(rawTransaction);
-                transaction.sign(this.getAddressFromEncryptedPK(sender.wif).privateKey);
+                const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
+                transaction.sign(pk);
                 const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
                 resolve(reciept.transactionHash);
 
@@ -49,24 +50,7 @@ export class EthereumService {
             }
         });
     }
-
-    getAddressFromEncryptedPK(encrypted: string): Address {
-        const passphrase = AES.decrypt(encrypted, process.env.KEY).toString(enc.Utf8);
-        return this.getAddress(passphrase);
-    }
-
-    getAddress(passphrase: string): Address {
-        const seed: Buffer = mnemonicToSeedSync(passphrase);
-        const root: EthereumHDKey = hdkey.fromMasterSeed(seed);
-        var path = "m/44'/60'/0'/0/0";
-        const addrNode: EthereumHDKey = root.derivePath(path);
-        const pk: Buffer = addrNode.getWallet().getPrivateKey();
-        return {
-            address: addrNode.getWallet().getAddressString(),
-            privateKey: pk
-        }
-    }
-
+    
     getEthereumAddress(passphrase: string): AddressMapping {
         const seed = mnemonicToSeedSync(passphrase);
         const root = hdkey.fromMasterSeed(seed);
@@ -75,7 +59,7 @@ export class EthereumService {
 
         const pk = addrNode.getWallet().getPrivateKeyString();
 
-        const encWif = AES.encrypt(passphrase, process.env.KEY).toString();
+        const encWif = AES.encrypt(pk, process.env.KEY).toString();
         const am: AddressMapping = {
             chain: WALLET_TYPE.ETH,
             chainAddress: addrNode.getWallet().getAddressString(),
