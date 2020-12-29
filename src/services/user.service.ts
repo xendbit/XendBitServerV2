@@ -180,7 +180,6 @@ export class UserService {
                 }
 
                 dbUser = this.toUser(uro);
-                this.ethUtils.getEthereumAddress(uro.passphrase);
                 const accountName = await this.moneywaveService.verifyBankAccount(uro.accountNumber, uro.bankCode)
                 dbUser.bankAccountName = accountName;
                 const bitcoinAM = this.btcUtils.getBitcoinAddress(uro.passphrase);

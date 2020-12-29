@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { mnemonicToSeedSync } from 'bip39';
-import { AES } from 'crypto-js';
+import { AES, enc } from 'crypto-js';
 import { hdkey } from 'ethereumjs-wallet';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { WALLET_TYPE } from 'src/utils/enums';
 import Web3 from 'web3';
 import { Config } from './config.service';
 import { XendChainService } from './xendchain.service';
+import { Transaction, TxData } from 'ethereumjs-tx';
+import EthereumHDKey from 'ethereumjs-wallet/dist/hdkey';
 
 @Injectable()
 export class EthereumService {
@@ -22,19 +24,58 @@ export class EthereumService {
     }
 
     async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<any> {
-                
+        return new Promise(async (resolve, reject) => {
+            try {
+                const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
+
+                const block = await this.web3.eth.getBlock("latest");
+                var rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(block.gasUsed),
+                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    to: recipient,
+                    value: this.web3.utils.toWei(amount, "ether"),
+                    nonce: this.web3.utils.toHex(nonce)
+                }
+
+
+                const transaction = new Transaction(rawTransaction);
+                transaction.sign(this.getAddressFromEncryptedPK(sender.wif).privateKey);
+                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve(reciept.transactionHash);
+
+                resolve(reciept.transactionHash);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    getAddressFromEncryptedPK(encrypted: string): Address {
+        const passphrase = AES.decrypt(encrypted, process.env.KEY).toString(enc.Utf8);
+        return this.getAddress(passphrase);
+    }
+
+    getAddress(passphrase: string): Address {
+        const seed: Buffer = mnemonicToSeedSync(passphrase);
+        const root: EthereumHDKey = hdkey.fromMasterSeed(seed);
+        var path = "m/44'/60'/0'/0/0";
+        const addrNode: EthereumHDKey = root.derivePath(path);
+        const pk: Buffer = addrNode.getWallet().getPrivateKey();
+        return {
+            address: addrNode.getWallet().getAddressString(),
+            privateKey: pk
+        }
     }
 
     getEthereumAddress(passphrase: string): AddressMapping {
         const seed = mnemonicToSeedSync(passphrase);
         const root = hdkey.fromMasterSeed(seed);
         var path = "m/44'/60'/0'/0/0";
-        const addrNode = root.derivePath(path)        
+        const addrNode = root.derivePath(path)
 
         const pk = addrNode.getWallet().getPrivateKeyString();
-        this.xendChain.importPrivateKey(pk);
 
-        const encWif = AES.encrypt(addrNode.getWallet().getPrivateKeyString(), process.env.KEY).toString();
+        const encWif = AES.encrypt(passphrase, process.env.KEY).toString();
         const am: AddressMapping = {
             chain: WALLET_TYPE.ETH,
             chainAddress: addrNode.getWallet().getAddressString(),
@@ -63,4 +104,9 @@ export class EthereumService {
             percXendFees: am.percXendFees
         }
     }
+}
+
+export class Address {
+    address: string;
+    privateKey: Buffer;
 }
