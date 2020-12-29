@@ -34,7 +34,8 @@ export class UserService {
         @InjectRepository(User) private userRepo: Repository<User>,
         @InjectRepository(AddressMapping) private amRepo: Repository<AddressMapping>,        
 
-    ) { }
+    ) {         
+    }
 
     async findByColumn(col: string, val: string): Promise<User> {
         try {

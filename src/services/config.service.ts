@@ -12,8 +12,8 @@ export class Config {
         "bitcoin.port": 8332,
         "bitcoin.timeout": 120000,
         "ngnc.contract.address": "0x61f67f8902650f4baf783bdf85264175326589e3",
-        "contractor": "0xC04915f6b3ff85b50A863eB1FcBF368171539413",
         "email.confirmation.url": "https://xendfilb.xendbit.net/api/user/confirm-email",
+        "xend.address": "0xC04915f6b3ff85b50A863eB1FcBF368171539413",
         "BTC": {
             "min.xend.fees": 5.0,
             "min.block.fees": 0.00005,

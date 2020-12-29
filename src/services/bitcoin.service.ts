@@ -4,7 +4,7 @@ import { mnemonicToSeedSync } from 'bip39';
 import { Config } from './config.service';
 import { AES, enc } from "crypto-js";
 import { Injectable, Logger } from "@nestjs/common";
-import { ImportAddressParams, ImportPrivKeyParams, ListUnspentParams, RPCClient, SendManyParams } from 'rpc-bitcoin';
+import { ImportAddressParams, ListUnspentParams, RPCClient } from 'rpc-bitcoin';
 import { BitcoinTransaction } from "src/models/bitcoin.transaction";
 import { WALLET_TYPE } from "src/utils/enums";
 
