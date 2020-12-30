@@ -23,7 +23,7 @@ export class EthereumService {
         return this.web3.eth.getBalance(address);
     }
 
-    async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<any> {
+    async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
                 const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);

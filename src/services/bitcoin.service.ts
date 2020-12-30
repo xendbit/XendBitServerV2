@@ -25,7 +25,7 @@ export class BitcoinService {
         this.client = new RPCClient({ url, port, timeout, user, pass });
     }
 
-    async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<any> {
+    async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
                 this.psbt = new Psbt({ network: networks.bitcoin });
@@ -43,7 +43,6 @@ export class BitcoinService {
 
                 for(let unspent of unspents) {
                     // get the full hex
-                    this.logger.debug(unspent);
                     const fullTx = await this.client.gettransaction({ txid: unspent.txid });
                     const hex = fullTx.hex;                    
                     this.psbt.addInput({                        
@@ -53,8 +52,6 @@ export class BitcoinService {
                         nonWitnessUtxo: Buffer.from(hex, 'hex'), // works for witness inputs too!
                     });
                 }
-
-                this.logger.debug(this.psbt.txInputs);
 
                 const totalUTXO = unspents.map((x: BitcoinTransaction) => {
                     return x.amount;
@@ -76,10 +73,13 @@ export class BitcoinService {
                     value: Math.round(amount * BitcoinService.SATOSHI),
                 });
 
+                this.logger.debug("Added Main Output");
+
                 this.psbt.addOutput({
                     address: xendAddress,
                     value: Math.round(xendFees * BitcoinService.SATOSHI)
                 });
+                this.logger.debug("Added Xend Fees Output");
 
                 if (change > 0) {
                     this.psbt.addOutput({
@@ -87,6 +87,8 @@ export class BitcoinService {
                         value: Math.round(change * BitcoinService.SATOSHI)
                     });
                 }
+
+                this.logger.debug("Added Change Output");
 
                 unspents.forEach((_unspent, index) => {
                     this.psbt.signInput(index, ECPair.fromWIF(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8)));
@@ -98,9 +100,7 @@ export class BitcoinService {
 
                 const txHex = this.psbt.extractTransaction().toHex();
                 
-                this.logger.debug(txHex);
                 const response = await this.client.sendrawtransaction({hexstring: txHex});                
-                this.logger.debug(response);
                 resolve(response);
             } catch (e) {
                 reject(e);

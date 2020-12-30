@@ -27,7 +27,7 @@ export class UserService {
         private providusService: ProvidusBankService,
         private btcUtils: BitcoinService,
         private ethUtils: EthereumService,
-        private xendUtils: XendChainService,
+        private xendService: XendChainService,
         private emailService: EmailService,
         private imageService: ImageService,
         private blockchainService: BlockchainService,
@@ -56,7 +56,7 @@ export class UserService {
                 const ethAddress = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain === 'ETH';
                 }).chainAddress;
-                const ngncBalance: number = await this.xendUtils.getNgncBalance(ethAddress);
+                const ngncBalance: number = await this.xendService.getNgncBalance(ethAddress);
                 resolve(ngncBalance);
             } catch (error) {
                 reject(error);
@@ -87,6 +87,28 @@ export class UserService {
         }
 
         return "Can not find confirmation link.";
+    }
+
+    async fundAccount(accountNumber: string, amount: number): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let dbUser = await this.findByColumn("NGNC_ACCOUNT_NUMBER", accountNumber);
+                if (dbUser === undefined) {
+                    throw Error("User with account number not found");
+                }
+
+                const am: AddressMapping = dbUser.addressMappings.find((x: AddressMapping) => {
+                    return x.chain === WALLET_TYPE.ETH;
+                });
+
+                amount = Math.round(amount);
+                this.logger.debug(`Funding ....... ${am.chainAddress} with ${amount}`);
+                await this.xendService.fundNgnc(am.chainAddress, amount);
+                resolve("success");
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     loginNoHash(emailAddress: string, password: string): Promise<User> {
@@ -147,7 +169,7 @@ export class UserService {
                     return x.chain === WALLET_TYPE.ETH;
                 }).chainAddress;
 
-                dbUser.ngncBalance = await this.xendUtils.getNgncBalance(ethAddress);
+                dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
                 resolve(dbUser);
             } catch (error) {
                 reject(error);

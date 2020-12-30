@@ -13,7 +13,7 @@ import { UserService } from './user.service';
 
 @Injectable()
 export class ExchangeService {
-    @InjectRepository(AddressMapping) 
+    @InjectRepository(AddressMapping)
     private amRepo: Repository<AddressMapping>
     constructor(
         private binanceService: BinanceService,
@@ -50,7 +50,7 @@ export class ExchangeService {
         });
     }
 
-    async trade(tro: TradeRequestObject) {
+    async trade(tro: TradeRequestObject): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userService.loginNoHash(tro.emailAddress, tro.password);
@@ -60,13 +60,12 @@ export class ExchangeService {
                             // TODO
                             break;
                         case 'MO':
-                            this.binanceService.sellTrade(tro, user);
+                            await this.binanceService.sellTrade(tro, user);
                             break;
                     }
                 }
-                // const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                //     return x.chain === tro.fromCoin;
-                // })
+
+                resolve("success");
             } catch (e) {
                 reject(e);
             }

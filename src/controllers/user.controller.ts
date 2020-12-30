@@ -7,7 +7,9 @@ import { Response, ResponseUtils } from 'src/utils/response.utils';
 
 @Controller('user')
 export class UserController {
-    constructor(private userService: UserService) { }
+    constructor(
+        private userService: UserService,
+    ) { }
 
     @Post('new')
     @Roles('api')
@@ -44,4 +46,10 @@ export class UserController {
         const balance = await this.userService.getNgncBalance(id);
         return ResponseUtils.getSuccessResponse(balance)
     }    
+
+    @Post('fund-account/:accountNumber/:amount')
+    @Roles('api')
+    async fundAccount(@Param("accountNumber") accountNumber: string, @Param("amount") amount: number): Promise<Response> {        
+        return ResponseUtils.getSuccessResponse(await this.userService.fundAccount(accountNumber, amount));
+    }
 }
