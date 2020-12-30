@@ -42,6 +42,21 @@ export class XendChainService {
         });
     }
 
+    checkNgncBalance(address: string, compareBalance: number): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const balance = await this.getNgncBalance(address);
+                if (compareBalance > balance) {
+                    throw Error(`Insufficient xNGN balance.`);
+                }
+        
+                resolve(true);        
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     fundNgnc(address: string, amount: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -75,6 +90,7 @@ export class XendChainService {
     sendNgnc(sender: AddressMapping, recipient: string, amount: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
+                amount = Math.round(amount * (10**2));
                 const amountHex = this.web3.utils.toHex(amount);
                 const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, this.ngncContractAddress, { from: sender.chainAddress });

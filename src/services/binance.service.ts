@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Binance, BalanceUpdate, Order } from 'binance-api-node';
+import { Binance, Order, WithrawResponse } from 'binance-api-node';
 import { TradeRequestObject } from 'src/models/request.objects/trade.ro';
 import { v4 as randomUUID } from 'uuid';
 import { User } from 'src/models/user.entity';
@@ -10,6 +10,7 @@ import { STATUS, WALLET_TYPE } from 'src/utils/enums';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { XendChainService } from './xendchain.service';
 import { BlockchainService } from './blockchain.service';
+import { EmailService } from './email.service';
 
 const BinanceDefault = require('binance-api-node').default
 
@@ -25,7 +26,8 @@ export class BinanceService {
     constructor(
         @InjectRepository(BinanceOrder) private binanceRepo: Repository<BinanceOrder>,
         private blockchainService: BlockchainService,
-        private xendService: XendChainService
+        private xendService: XendChainService,
+        private emailService: EmailService,
     ) {
     }
 
@@ -34,6 +36,76 @@ export class BinanceService {
         const result = await this.client.prices({ symbol: symbol });
         this.logger.debug(result);
         return +result[symbol];
+    }
+
+    async buyTrade(tro: TradeRequestObject, user: User): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            let bo: BinanceOrder = {
+                clientId: randomUUID(),
+                coin: tro.fromCoin,
+                price: tro.rate,
+                quantity: tro.amountToSpend,
+                quoteOrderQty: tro.amountToGet,
+                side: tro.side,
+                status: STATUS.ORDER_PLACED,
+                timestamp: new Date().getTime(),
+                user: user
+            }
+
+            try {
+                bo = await this.binanceRepo.save(bo);
+
+                const symbol = bo.coin + "NGN";
+                const orderReponse: Order = await this.client.order({
+                    quantity: bo.quoteOrderQty + "",
+                    side: bo.side,
+                    symbol: symbol,
+                    type: 'MARKET',
+                    newClientOrderId: bo.clientId
+                });
+                bo.status = STATUS.MARKET_ORDER_PLACED
+                bo = await this.binanceRepo.save(bo);
+
+                if (orderReponse.status === 'FILLED') {
+                    const filled = orderReponse.fills.map(fill => {
+                        const value: number = (+fill.price * +fill.qty) - +fill.commission;
+                        return value;
+                    }).reduce((sum: number, x: number) => {
+                        return sum += x;
+                    });
+                    bo.status = STATUS.ORDER_FILLED
+                    bo = await this.binanceRepo.save(bo);
+
+                    // withdraw it    
+                    const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
+                        return x.chain === WALLET_TYPE[bo.coin];
+                    });
+
+                    const wr: WithrawResponse = await this.client.withdraw({
+                        address: am.chainAddress,
+                        amount: filled,
+                        asset: bo.coin,
+                    });
+
+                    if (wr.success) {
+                        bo.status = STATUS.SUCCESS;
+                    } else {
+                        bo.status = STATUS.FAILURE;
+                    }
+                    bo = await this.binanceRepo.save(bo);
+                } else {
+                    bo.status = STATUS.MARKET_ORDER_PENDING;
+                    bo = await this.binanceRepo.save(bo);
+                }
+
+                resolve("success");
+            } catch (error) {
+                reject(error);
+            } finally {
+                bo.user = user;
+                await this.emailService.sendBinanceEmail(bo);
+            }
+        });
     }
 
     async sellTrade(tro: TradeRequestObject, user: User): Promise<string> {
@@ -103,10 +175,17 @@ export class BinanceService {
                                             await this.xendService.fundNgnc(am.chainAddress, Math.round(filled));
                                             bo.status = STATUS.SUCCESS;
                                             await this.binanceRepo.save(bo);
-                                            this.client
+                                        } else {
+                                            this.logger.debug(orderReponse.status);
                                         }
+                                    } else {
+                                        this.logger.debug("Order Already Successfully Processed");
                                     }
+                                } else {
+                                    this.logger.debug(`${msg.balanceDelta} is not equal ${bo.quantity}`);
                                 }
+                            } else {
+                                this.logger.debug('Not the same asset');
                             }
                         } catch (e) {
                             bo.status = STATUS.FAILURE;

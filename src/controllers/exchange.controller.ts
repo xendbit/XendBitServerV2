@@ -20,7 +20,12 @@ export class ExchangeController {
     }
 
     @Post('sell-trade')
-    async trade(@Body() tro: TradeRequestObject): Promise<Response> {
-        return ResponseUtils.getSuccessResponse(await this.exchangeService.trade(tro));
+    async sellTrade(@Body() tro: TradeRequestObject): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.exchangeService.sellTrade(tro));
     }
+
+    @Post('buy-trade')
+    async buyTrade(@Body() tro: TradeRequestObject): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.exchangeService.buyTrade(tro));
+    }    
 }

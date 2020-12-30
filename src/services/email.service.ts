@@ -1,9 +1,13 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, Logger } from '@nestjs/common';
+import { Binance } from 'binance-api-node';
 import { AES } from 'crypto-js';
 import { readFileSync } from 'fs';
+import { AddressMapping } from 'src/models/address.mapping.entity';
+import { BinanceOrder } from 'src/models/binance.order.entity';
 import { User } from 'src/models/user.entity';
 import { Config } from 'src/services/config.service';
+import { WALLET_TYPE } from 'src/utils/enums';
 
 @Injectable()
 export class EmailService {
@@ -19,6 +23,29 @@ export class EmailService {
 
         const subjectLine = "Congratulations: Welcome to XendBit";
         await this.sendEmail(dbUser.email, subjectLine, content, [])
+    }
+
+    async sendBinanceEmail(bo: BinanceOrder) {
+        const am: AddressMapping = bo.user.addressMappings.find((x: AddressMapping) => {
+            return x.chain === WALLET_TYPE.ETH;
+        });
+
+        let content = readFileSync('/etc/xendbit/binance_order.html', 'utf8');
+        content = content.replace("#side", bo.side);
+        content = content.replace("#quantity", bo.quantity + "");
+        content = content.replace("#quoteOrderQtty", bo.quoteOrderQty + "");
+        content = content.replace("#price", bo.price + "");
+        content = content.replace("#coin", bo.coin + "");
+        content = content.replace("#wallet", am.chainAddress);
+        content = content.replace("#status", bo.status);
+        content = content.replace("#user", bo.user.email);
+
+        this.logger.debug(content);
+        const subjectLine = "New Binance Buy-Order";
+        const cc: string[] = [
+            "seguna@xendbit.com", "akintayo.segun@gmail.com", "aonibudo@gmail.com"
+        ];
+        await this.sendEmail("bolaji@xendbit.com", subjectLine, content, cc)        
     }
 
     async sendEmail(to: string, subject: string, content: string, cc: string[]) {
