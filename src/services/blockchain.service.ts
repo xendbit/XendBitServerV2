@@ -21,59 +21,78 @@ export class BlockchainService {
         private ethereumService: EthereumService,
     ) { }
 
-    async sendToken(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<any> {
-        switch (sender.chain) {
-            case WALLET_TYPE.BTC:
-                return this.bitcoinService.send(sender, recipient, amount, xendFees, blockFees);
-            case WALLET_TYPE.ETH:
-                break;
-        }
+    async sendToken(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                switch (sender.chain) {
+                    case WALLET_TYPE.BTC:
+                        resolve(await this.bitcoinService.send(sender, recipient, amount, xendFees, blockFees));
+                    case WALLET_TYPE.ETH:
+                        break;
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     async checkBalance(wallet: string, user: User, compareBalance: number): Promise<boolean> {
-        let balance = 0;
-        let address = user.addressMappings.find((x: AddressMapping) => {
-            return x.chain === wallet;
-        }).chainAddress;
+        return new Promise(async (resolve, reject) => {
+            try {
+                let balance = 0;
+                let address = user.addressMappings.find((x: AddressMapping) => {
+                    return x.chain === wallet;
+                }).chainAddress;
 
-        switch (wallet) {
-            case WALLET_TYPE.BTC:
-                balance = await this.bitcoinService.getBalance([address]);
-                break;
-            case WALLET_TYPE.ETH:
-                balance = await this.ethereumService.getBalance(address);
-            default:
-                break;
-        }
+                switch (wallet) {
+                    case WALLET_TYPE.BTC:
+                        balance = await this.bitcoinService.getBalance([address]);
+                        break;
+                    case WALLET_TYPE.ETH:
+                        balance = await this.ethereumService.getBalance(address);
+                    default:
+                        break;
+                }
 
-        if (compareBalance > balance) {
-            throw Error(`Insufficient ${wallet} balance.`);
-        }
+                if (compareBalance > balance) {
+                    throw Error(`Insufficient ${wallet} balance.`);
+                }
 
-        return true;
+                resolve(true);
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     async getBalance(wallet: string, user: User): Promise<any> {
-        let balance = 0;
-        const address = user.addressMappings.find((x: AddressMapping) => {
-            return x.chain === wallet;
-        }).chainAddress;
-        const escrow = await this.getEscrow(wallet, user.id);
-        switch (wallet) {
-            case WALLET_TYPE.BTC:
-                balance = await this.bitcoinService.getBalance([address]);
-                balance -= escrow;
-                break;
-            case WALLET_TYPE.ETH:
-                balance = await this.ethereumService.getBalance(address);
-                balance -= escrow;
-                break;
-        }
+        return new Promise(async (resolve, reject) => {
+            try {
+                let balance = 0;
+                const address = user.addressMappings.find((x: AddressMapping) => {
+                    return x.chain === wallet;
+                }).chainAddress;
+                const escrow = await this.getEscrow(wallet, user.id);
+                switch (wallet) {
+                    case WALLET_TYPE.BTC:
+                        balance = await this.bitcoinService.getBalance([address]);
+                        balance -= escrow;
+                        break;
+                    case WALLET_TYPE.ETH:
+                        balance = await this.ethereumService.getBalance(address);
+                        balance -= escrow;
+                        break;
+                }
 
-        return {
-            balance: balance,
-            escrow: escrow
-        };
+                balance = 10;
+                resolve({
+                    balance: balance,
+                    escrow: escrow
+                });
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     getFees(user: User): AddressMapping[] {
@@ -95,23 +114,29 @@ export class BlockchainService {
     }
 
     async getEscrow(coin: string, sellerId): Promise<number> {
-        const ex = await this.exchangeRepo
-            .createQueryBuilder("exchange")
-            .where("exchange.active = true")
-            .andWhere("exchange.from_coin = :coin", { coin: coin })
-            .andWhere("exchange.status IN ('ORDER_PLACED', 'BUYER_PAID')")
-            .andWhere("exchange.sellerId = :sellerId", { sellerId: sellerId })
-            .leftJoinAndSelect("exchange.seller", "seller")
-            .getMany();
+        return new Promise(async (resolve, reject) => {
+            try {
+                const ex = await this.exchangeRepo
+                    .createQueryBuilder("exchange")
+                    .where("exchange.active = true")
+                    .andWhere("exchange.from_coin = :coin", { coin: coin })
+                    .andWhere("exchange.status IN ('ORDER_PLACED', 'BUYER_PAID')")
+                    .andWhere("exchange.sellerId = :sellerId", { sellerId: sellerId })
+                    .leftJoinAndSelect("exchange.seller", "seller")
+                    .getMany();
 
-        if (ex.length === 0) {
-            return 0;
-        }
+                if (ex.length === 0) {
+                    resolve(0);
+                }
 
-        return ex.map((x) => {
-            return x.amountToSell + x.blockFees + x.xendFees;
-        }).reduce((sum: number, x: number) => {
-            return sum += x;
+                resolve(ex.map((x) => {
+                    return x.amountToSell + x.blockFees + x.xendFees;
+                }).reduce((sum: number, x: number) => {
+                    return sum += x;
+                }));
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 

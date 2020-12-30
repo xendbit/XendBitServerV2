@@ -64,11 +64,11 @@ export class UserService {
         });
     }
 
-    async balance(id: number, wallet: string) {
+    async balance(id: number, wallet: string): Promise<number> {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
-                resolve(this.blockchainService.getBalance(wallet, user));
+                resolve(await this.blockchainService.getBalance(wallet, user));
             } catch (error) {
                 reject(error);
             }
