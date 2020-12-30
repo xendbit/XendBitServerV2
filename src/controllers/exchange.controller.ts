@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { OrdersRequest } from 'src/models/request.objects/orders.ro';
 import { SendCoinsRequestObject } from 'src/models/request.objects/send.coins.ro';
 import { TradeRequestObject } from 'src/models/request.objects/trade.ro';
 import { ExchangeService } from 'src/services/exchange.service';
@@ -18,6 +19,16 @@ export class ExchangeController {
     async sendCoins(@Body() sco: SendCoinsRequestObject): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.exchangeService.sendCoins(sco));
     }
+
+    @Post('my-sell-orders')
+    async sellOrders(@Body() or: OrdersRequest): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.exchangeService.sellOrders(or));
+    }    
+
+    @Post('my-sell-orders/update')
+    async updateSellOrders(@Body() or: OrdersRequest): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.exchangeService.updateSellOrders(or));
+    }    
 
     @Post('sell-trade')
     async sellTrade(@Body() tro: TradeRequestObject): Promise<Response> {

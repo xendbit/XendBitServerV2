@@ -84,7 +84,6 @@ export class BlockchainService {
                         break;
                 }
 
-                balance = 10;
                 resolve({
                     balance: balance,
                     escrow: escrow

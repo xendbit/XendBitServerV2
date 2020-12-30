@@ -14,6 +14,7 @@ import { XendChainService } from './xendchain.service';
 import { STATUS, WALLET_TYPE } from 'src/utils/enums';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { OrdersRequest } from 'src/models/request.objects/orders.ro';
 
 @Injectable()
 export class ExchangeService {
@@ -91,7 +92,7 @@ export class ExchangeService {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userService.loginNoHash(tro.emailAddress, tro.password);
-                //if (await this.blockchainService.checkBalance(tro.fromCoin, user, tro.amountToSpend)) {
+                if (await this.blockchainService.checkBalance(tro.fromCoin, user, tro.amountToSpend)) {
                     switch (tro.orderType) {
                         case 'P2P':
                             await this._sellTradeP2P(tro, user);                            
@@ -100,9 +101,36 @@ export class ExchangeService {
                             await this.binanceService.sellTrade(tro, user);
                             break;
                     }
-                //}
+                }
 
                 resolve("success");
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    async updateSellOrders(or: OrdersRequest): Promise<Exchange[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    async sellOrders(or: OrdersRequest): Promise<Exchange[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const user: User = await this.userService.loginNoHash(or.emailAddress, or.password);
+                const sellOrders: Exchange[] =await this.exchangeRepo.createQueryBuilder("exchange")
+                            .where("active = :active", {active: true})
+                            .andWhere("sellerId = :sellerId", {sellerId: user.id})
+                            .andWhere("from_coin = :coin", {coin: or.wallet})
+                            .orWhere("to_coin = :coin", {coin: or.wallet})
+                            .orderBy("datetime",'DESC')
+                            .getMany();
+                resolve(sellOrders);
             } catch (e) {
                 reject(e);
             }
