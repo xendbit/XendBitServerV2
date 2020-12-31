@@ -14,6 +14,8 @@ export class Config {
         "ngnc.contract.address": "0x61f67f8902650f4baf783bdf85264175326589e3",
         "email.confirmation.url": "https://xendfilb.xendbit.net/api/user/confirm-email",
         "xend.address": "0xC04915f6b3ff85b50A863eB1FcBF368171539413",
+        "btc.history.api.url": "https://api.blockcypher.com/v1/btc/main/addrs/",
+        "eth.history.api.url": "https://api.blockcypher.com/v1/eth/main/addrs/",
         "BTC": {
             "min.xend.fees": 5.0,
             "min.block.fees": 0.00005,
@@ -22,7 +24,7 @@ export class Config {
             "max.xend.fees": 100.0,
             "perc.xend.fees": 0.005,
             "external.withdrawal.fees": 0.0005,
-            "xend.fees.address": "16buz7mpfGz1mtfTrRFLkGSEUP6njC8hhX",
+            "xend.fees.address": "16buz7mpfGz1mtfTrRFLkGSEUP6njC8hhX",            
         },
         "ETH": {
             "min.xend.fees": 5.0,

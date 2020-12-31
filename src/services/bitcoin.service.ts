@@ -7,6 +7,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ImportAddressParams, ListUnspentParams, RPCClient } from 'rpc-bitcoin';
 import { BitcoinTransaction } from "src/models/bitcoin.transaction";
 import { WALLET_TYPE } from "src/utils/enums";
+import { HttpClient } from "typed-rest-client/HttpClient";
+import { History } from "./blockchain.service";
 
 @Injectable()
 export class BitcoinService {
@@ -16,6 +18,8 @@ export class BitcoinService {
     static SATOSHI = 100000000;
     psbt: Psbt;
 
+    httpService: HttpClient;
+
     constructor(private config: Config) {
         const url = this.config.p["bitcoin.server.url"];
         const user = process.env.BITCOIN_RPC_USER;
@@ -23,6 +27,7 @@ export class BitcoinService {
         const port = this.config.p["bitcoin.port"];
         const timeout = this.config.p["bitcoin.timeout"];
         this.client = new RPCClient({ url, port, timeout, user, pass });
+        this.httpService = new HttpClient('Blockchain.info API');
     }
 
     async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<string> {
@@ -31,7 +36,7 @@ export class BitcoinService {
                 this.psbt = new Psbt({ network: networks.bitcoin });
                 this.psbt.setVersion(2);
                 this.psbt.setLocktime(0);
-        
+
                 const xendAddress: string = this.config.p.BTC["xend.fees.address"];
                 const requiredAmount: number = amount + xendFees + blockFees;
 
@@ -41,11 +46,11 @@ export class BitcoinService {
                     throw Error('Insufficient funds');
                 }
 
-                for(let unspent of unspents) {
+                for (let unspent of unspents) {
                     // get the full hex
                     const fullTx = await this.client.gettransaction({ txid: unspent.txid });
-                    const hex = fullTx.hex;                    
-                    this.psbt.addInput({                        
+                    const hex = fullTx.hex;
+                    this.psbt.addInput({
                         hash: unspent.txid,  // txid number
                         index: unspent.vout,  // output number
                         sequence: 0xfffffffe,
@@ -99,8 +104,8 @@ export class BitcoinService {
                 this.psbt.finalizeAllInputs();
 
                 const txHex = this.psbt.extractTransaction().toHex();
-                
-                const response = await this.client.sendrawtransaction({hexstring: txHex});                
+
+                const response = await this.client.sendrawtransaction({ hexstring: txHex });
                 resolve(response);
             } catch (e) {
                 reject(e);
@@ -184,6 +189,35 @@ export class BitcoinService {
         }
 
         return am;
+    }
+
+    async history(address: string): Promise<History[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const url = this.config.p["btc.history.api.url"] + address;
+                const res = await this.httpService.get(url);
+                const transactions: History[] = [];
+                if (res.message.statusCode === 200) {
+                    const body = await res.readBody();
+                    const parsed = JSON.parse(body);
+                    const txs = parsed.txrefs;                    
+                    for(let tx of txs) {
+                        const history: History = {
+                            date: tx.confirmed.substr(0, 10),
+                            hash: tx.tx_hash,
+                            value: tx.value/BitcoinService.SATOSHI,
+                            status: tx.tx_input_n === -1 ? "IN" : "OUT"
+                        }
+
+                        transactions.push(history);
+                    }                    
+                }
+
+                resolve(transactions);
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     getFees(am: AddressMapping) {

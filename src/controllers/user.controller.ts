@@ -52,4 +52,10 @@ export class UserController {
     async fundAccount(@Param("accountNumber") accountNumber: string, @Param("amount") amount: number): Promise<Response> {        
         return ResponseUtils.getSuccessResponse(await this.userService.fundAccount(accountNumber, amount));
     }
+
+    @Get('history/:address/:wallet')
+    async history(@Param('address') address: string, @Param('wallet') wallet: string): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.history(address, wallet));
+    }
+
 }

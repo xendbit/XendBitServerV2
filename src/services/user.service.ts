@@ -11,7 +11,7 @@ import { User } from 'src/models/user.entity';
 import { BitcoinService } from 'src/services/bitcoin.service';
 import { WALLET_TYPE } from 'src/utils/enums';
 import { Repository } from 'typeorm';
-import { BlockchainService } from './blockchain.service';
+import { BlockchainService, History } from './blockchain.service';
 import { EmailService } from './email.service';
 import { EthereumService } from './ethereum.service';
 import { ImageService } from './image.service';
@@ -32,9 +32,21 @@ export class UserService {
         private imageService: ImageService,
         private blockchainService: BlockchainService,
         @InjectRepository(User) private userRepo: Repository<User>,
-        @InjectRepository(AddressMapping) private amRepo: Repository<AddressMapping>,        
+        @InjectRepository(AddressMapping) private amRepo: Repository<AddressMapping>,
 
-    ) {         
+    ) {
+    }
+
+    async history(address: string, wallet: string): Promise<History[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const coin = WALLET_TYPE[wallet];
+                resolve(this.blockchainService.history(address, coin));
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     async findByColumn(col: string, val: string): Promise<User> {
@@ -129,7 +141,7 @@ export class UserService {
                 }
 
                 const ams: AddressMapping[] = [];
-                
+
                 dbUser.addressMappings = this.blockchainService.getFees(dbUser);
                 resolve(dbUser);
             } catch (error) {

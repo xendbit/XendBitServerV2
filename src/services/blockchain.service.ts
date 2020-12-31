@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { send } from "process";
 import { AddressMapping } from "src/models/address.mapping.entity";
 import { BinanceOrder } from "src/models/binance.order.entity";
 import { Exchange } from "src/models/exchange.entity";
@@ -28,6 +27,23 @@ export class BlockchainService {
                     case WALLET_TYPE.BTC:
                         resolve(await this.bitcoinService.send(sender, recipient, amount, xendFees, blockFees));
                     case WALLET_TYPE.ETH:
+                        break;
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async history(address: string, coin: WALLET_TYPE): Promise<History[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                switch (coin) {
+                    case WALLET_TYPE.BTC:
+                        resolve(this.bitcoinService.history(address));
+                        break;
+                    case WALLET_TYPE.ETH:
+                        resolve(this.ethereumService.history(address));
                         break;
                 }
             } catch (error) {
@@ -162,4 +178,11 @@ export class BlockchainService {
             }
         });
     }
+}
+
+export class History {
+    hash: string;
+    value: number;
+    date: string;
+    status: string;
 }
