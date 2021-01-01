@@ -27,14 +27,21 @@ export class ExchangeService {
         private userService: UserService,
         private blockchainService: BlockchainService,
         private bitcoinService: BitcoinService,
-        private xendService: XendChainService,      
-        private config: Config  
+        private xendService: XendChainService,
+        private config: Config
     ) { }
 
     async usdRate(wallet: string, side: string) {
         const ngnRate: number = await this.binanceService.getPrice(wallet, 'NGN');
-        const usdRate: number = await this.binanceService.getPrice(wallet, 'USDT');
 
+        if (wallet.toUpperCase() === 'USDT') {
+            return {
+                'ngnRate': ngnRate,
+                'usdRate': 1
+            };
+        }
+
+        const usdRate: number = await this.binanceService.getPrice(wallet, 'USDT');
         return {
             'ngnRate': ngnRate,
             'usdRate': usdRate
@@ -70,12 +77,12 @@ export class ExchangeService {
                 const ethAM: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain === WALLET_TYPE.ETH
                 });
-                
-                if(await this.xendService.checkNgncBalance(ethAM.chainAddress, tro.amountToSpend)) {
+
+                if (await this.xendService.checkNgncBalance(ethAM.chainAddress, tro.amountToSpend)) {
                     // send ngnc to us
                     const xendAddress = this.config.p["xend.address"];
                     const trxHash = await this.xendService.sendNgnc(ethAM, xendAddress, tro.amountToSpend);
-                    
+
                     this.logger.debug(`Send NGNC Hash: ${trxHash}`);
 
                     await this.binanceService.buyTrade(tro, user);
@@ -95,7 +102,7 @@ export class ExchangeService {
                 if (await this.blockchainService.checkBalance(tro.fromCoin, user, tro.amountToSpend)) {
                     switch (tro.orderType) {
                         case 'P2P':
-                            await this._sellTradeP2P(tro, user);                            
+                            await this._sellTradeP2P(tro, user);
                             break;
                         case 'MO':
                             await this.binanceService.sellTrade(tro, user);
@@ -123,13 +130,13 @@ export class ExchangeService {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userService.loginNoHash(or.emailAddress, or.password);
-                const sellOrders: Exchange[] =await this.exchangeRepo.createQueryBuilder("exchange")
-                            .where("active = :active", {active: true})
-                            .andWhere("sellerId = :sellerId", {sellerId: user.id})
-                            .andWhere("from_coin = :coin", {coin: or.wallet})
-                            .orWhere("to_coin = :coin", {coin: or.wallet})
-                            .orderBy("datetime",'DESC')
-                            .getMany();
+                const sellOrders: Exchange[] = await this.exchangeRepo.createQueryBuilder("exchange")
+                    .where("active = :active", { active: true })
+                    .andWhere("sellerId = :sellerId", { sellerId: user.id })
+                    .andWhere("from_coin = :coin", { coin: or.wallet })
+                    .orWhere("to_coin = :coin", { coin: or.wallet })
+                    .orderBy("datetime", 'DESC')
+                    .getMany();
                 resolve(sellOrders);
             } catch (e) {
                 reject(e);
@@ -157,9 +164,9 @@ export class ExchangeService {
             toCoin: tro.toCoin,
             trxHex: "",
             trxId: randomUUID(),
-            xendFees: tro.xendFees        
+            xendFees: tro.xendFees
         }
 
-        exchange = await this.exchangeRepo.save(exchange);         
+        exchange = await this.exchangeRepo.save(exchange);
     }
 }

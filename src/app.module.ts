@@ -26,6 +26,7 @@ import { BlockchainService } from './services/blockchain.service';
 import { GrouplistsController } from './controllers/grouplists.controller';
 import { UserController } from './controllers/user.controller';
 import { BinanceOrder } from './models/binance.order.entity';
+import { EthereumTokensService } from './services/ethereum-tokens.service';
 
 @Module({
   imports: [
@@ -57,7 +58,8 @@ import { BinanceOrder } from './models/binance.order.entity';
     ImageService,
     ExchangeService,
     BinanceService,
-    BlockchainService
+    BlockchainService,
+    EthereumTokensService
   ],
 })
 export class AppModule { }

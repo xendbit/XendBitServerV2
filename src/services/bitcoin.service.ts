@@ -78,13 +78,10 @@ export class BitcoinService {
                     value: Math.round(amount * BitcoinService.SATOSHI),
                 });
 
-                this.logger.debug("Added Main Output");
-
                 this.psbt.addOutput({
                     address: xendAddress,
                     value: Math.round(xendFees * BitcoinService.SATOSHI)
                 });
-                this.logger.debug("Added Xend Fees Output");
 
                 if (change > 0) {
                     this.psbt.addOutput({
@@ -92,8 +89,6 @@ export class BitcoinService {
                         value: Math.round(change * BitcoinService.SATOSHI)
                     });
                 }
-
-                this.logger.debug("Added Change Output");
 
                 unspents.forEach((_unspent, index) => {
                     this.psbt.signInput(index, ECPair.fromWIF(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8)));
@@ -170,7 +165,7 @@ export class BitcoinService {
         };
 
         this.client.importaddress(params).then((x) => {
-            console.log("Imported BTC");
+            this.logger.debug('Imported BTC Addreess');
         });
 
         const encWif = AES.encrypt(wif, process.env.KEY).toString();

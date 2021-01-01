@@ -1,5 +1,8 @@
 export enum WALLET_TYPE {
-    BTC='BTC', ETH='ETH'
+    BTC='BTC', 
+    ETH='ETH',
+    USDT='USDT',
+    LINK='LINK'
 }
 
 export enum SIDE {

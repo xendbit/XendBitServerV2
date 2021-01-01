@@ -54,7 +54,7 @@ export class UserService {
             let user: User = await this.userRepo.createQueryBuilder("user")
                 .where(`${col} = :value`, { value: val })
                 .leftJoinAndSelect("user.addressMappings", "addressMappings")
-                .getOne();
+                .getOne();            
             return user;
         } catch (error) {
             throw error;
@@ -80,6 +80,7 @@ export class UserService {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
+                user.addressMappings = this.blockchainService.getFees(user);
                 resolve(await this.blockchainService.getBalance(wallet, user));
             } catch (error) {
                 reject(error);
@@ -283,11 +284,6 @@ export class UserService {
         }
 
         return u;
-    }
-
-    getPrivateKey(uro: UserRequestObject) {
-        //const am = this.ethUtils.getEthereumAddress("one two three four five six seven eight nine ten eleven twelve");
-        //this.logger.debug(am);        
     }
 
 }

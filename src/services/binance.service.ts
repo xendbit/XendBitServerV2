@@ -34,7 +34,6 @@ export class BinanceService {
     async getPrice(chain: string, currency: string): Promise<number> {
         const symbol = `${chain.toUpperCase()}${currency.toUpperCase()}`
         const result = await this.client.prices({ symbol: symbol });
-        this.logger.debug(result);
         return +result[symbol];
     }
 
@@ -128,14 +127,7 @@ export class BinanceService {
 
                 const coin = bo.coin.toString();
 
-                this.client.depositAddress({ asset: coin }).then(x => {
-                    this.logger.debug(x.success);
-                    this.logger.debug(x.address);
-
-                })
                 const depositAddress = await this.client.depositAddress({ asset: bo.coin });
-                this.logger.debug(depositAddress.success);
-                this.logger.debug(depositAddress.address);
 
                 const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain === WALLET_TYPE.ETH;
@@ -144,8 +136,6 @@ export class BinanceService {
                 this.client.ws.user(async (msg) => {
                     if (msg.eventType === "balanceUpdate") {
                         try {
-                            this.logger.debug(`Balance Update Called`);
-                            this.logger.debug(`Balance Delta: ${msg.balanceDelta}`);
                             if (WALLET_TYPE[msg.asset] === tro.fromCoin) {
                                 if (+msg.balanceDelta === bo.quantity) {
                                     bo = await this.binanceRepo.createQueryBuilder("binanceOrder")
