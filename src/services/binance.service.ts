@@ -22,9 +22,9 @@ export class BinanceService {
     });
 
     private readonly logger = new Logger(BinanceService.name);
+    @InjectRepository(BinanceOrder) private binanceRepo: Repository<BinanceOrder>;
 
-    constructor(
-        @InjectRepository(BinanceOrder) private binanceRepo: Repository<BinanceOrder>,
+    constructor(        
         private blockchainService: BlockchainService,
         private xendService: XendChainService,
         private emailService: EmailService,

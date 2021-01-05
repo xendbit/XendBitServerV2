@@ -8,7 +8,8 @@ import { HmacSHA256 } from 'crypto-js';
 @Injectable()
 export class GrouplistsService {
     private readonly logger = new Logger(GrouplistsService.name);
-    constructor(@InjectRepository(Grouplists) private glRepo: Repository<Grouplists>) {}
+    @InjectRepository(Grouplists) private glRepo: Repository<Grouplists>
+    constructor() {}
 
     findAll(): Promise<any> {        
         return this.getProperties();

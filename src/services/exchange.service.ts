@@ -31,21 +31,31 @@ export class ExchangeService {
         private config: Config
     ) { }
 
-    async usdRate(wallet: string, side: string) {
-        const ngnRate: number = await this.binanceService.getPrice(wallet, 'NGN');
+    async usdRate(wallet: string, side: string): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
 
-        if (wallet.toUpperCase() === 'USDT') {
-            return {
-                'ngnRate': ngnRate,
-                'usdRate': 1
-            };
-        }
+                const ngnRate: number = await this.binanceService.getPrice(wallet, 'NGN');
 
-        const usdRate: number = await this.binanceService.getPrice(wallet, 'USDT');
-        return {
-            'ngnRate': ngnRate,
-            'usdRate': usdRate
-        };
+                if (wallet.toUpperCase() === 'USDT') {
+                    resolve({
+                        'ngnRate': ngnRate,
+                        'usdRate': 1
+                    });
+                }
+
+                const usdRate: number = await this.binanceService.getPrice(wallet, 'USDT');
+                resolve({
+                    'ngnRate': ngnRate,
+                    'usdRate': usdRate
+                });
+            } catch (e) {
+                resolve({
+                    'ngnRate': 1,
+                    'usdRate': 1
+                });
+            }
+        });
     }
 
     async sendCoins(sco: SendCoinsRequestObject) {

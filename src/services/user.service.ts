@@ -22,6 +22,8 @@ import { XendChainService } from './xendchain.service';
 @Injectable()
 export class UserService {
     private readonly logger = new Logger(UserService.name);
+    @InjectRepository(User) private userRepo: Repository<User>;
+    @InjectRepository(AddressMapping) private amRepo: Repository<AddressMapping>;
     constructor(
         private moneywaveService: MoneyWaveService,
         private providusService: ProvidusBankService,
@@ -31,9 +33,6 @@ export class UserService {
         private emailService: EmailService,
         private imageService: ImageService,
         private blockchainService: BlockchainService,
-        @InjectRepository(User) private userRepo: Repository<User>,
-        @InjectRepository(AddressMapping) private amRepo: Repository<AddressMapping>,
-
     ) {
     }
 
@@ -107,7 +106,7 @@ export class UserService {
             try {
                 let dbUser = await this.findByColumn("NGNC_ACCOUNT_NUMBER", accountNumber);
                 if (dbUser === undefined) {
-                    throw Error("User with account number not found");
+                    reject("User with account number not found");
                 }
 
                 const am: AddressMapping = dbUser.addressMappings.find((x: AddressMapping) => {
@@ -130,15 +129,15 @@ export class UserService {
                 let dbUser = await this.findByColumn("EMAIL", emailAddress);
 
                 if (dbUser === undefined) {
-                    throw Error("User with email address already not found");
+                    reject("User with email address already not found");
                 }
 
                 if (!compareSync(password, dbUser.password)) {
-                    throw Error("Invalid login details: password");
+                    reject("Invalid login details: password");
                 }
 
                 if (!dbUser.isActivated) {
-                    throw Error("Account is not yet activated. Please check your email for instructions on how to activate your account");
+                    reject("Account is not yet activated. Please check your email for instructions on how to activate your account");
                 }
 
                 const ams: AddressMapping[] = [];
@@ -158,21 +157,21 @@ export class UserService {
                 let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
 
                 if (dbUser === undefined) {
-                    throw Error("User with email address already not found");
+                    reject("User with email address already not found");
                 }
 
                 if (dbUser.hash !== passphraseHash) {
                     // dbUser.hash = passphraseHash;
                     // this.userRepo.save(dbUser); 
-                    throw Error("Wallet Data Corrupted. Use the recover button to recover your wallet");
+                    reject("Wallet Data Corrupted. Use the recover button to recover your wallet");
                 }
 
                 if (!compareSync(lro.password, dbUser.password)) {
-                    throw Error("Invalid login details: password");
+                    reject("Invalid login details: password");
                 }
 
                 if (!dbUser.isActivated) {
-                    throw Error("Account is not yet activated. Please check your email for instructions on how to activate your account");
+                    reject("Account is not yet activated. Please check your email for instructions on how to activate your account");
                 }
 
                 const ams: AddressMapping[] = [];
@@ -200,19 +199,19 @@ export class UserService {
                 let dbUser = await this.findByColumn("EMAIL", uro.emailAddress);
                 if (dbUser !== undefined) {
                     // user already exists
-                    throw Error("User with email address already exists");
+                    reject("User with email address already exists");
                 }
 
                 dbUser = await this.findByColumn("PHONE_NUMBER", uro.phoneNumber);
                 if (dbUser !== undefined) {
                     // user already exists
-                    throw Error("User with phone number already exists");
+                    reject("User with phone number already exists");
                 }
 
                 dbUser = await this.findByColumn("bank_account_number", uro.accountNumber);
                 if (dbUser !== undefined) {
                     // user already exists
-                    throw Error("User with account number already exists");
+                    reject("User with account number already exists");
                 }
 
                 dbUser = this.toUser(uro);

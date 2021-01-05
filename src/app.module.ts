@@ -27,11 +27,14 @@ import { GrouplistsController } from './controllers/grouplists.controller';
 import { UserController } from './controllers/user.controller';
 import { BinanceOrder } from './models/binance.order.entity';
 import { EthereumTokensService } from './services/ethereum-tokens.service';
+import { DefiService } from './services/defi.service';
+import { DefiController } from './controllers/defi.controller';
+import { UniswapToken } from './models/uniswap.token.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([Grouplists, User, AddressMapping, Exchange, BinanceOrder]),
+    TypeOrmModule.forFeature([Grouplists, User, AddressMapping, Exchange, BinanceOrder, UniswapToken]),
     MailerModule.forRoot({  
       transport: 'smtps://contact@xendbit.com:jugDy4-wygmyh-fintoc@smtp.gmail.com',
       defaults: {
@@ -39,7 +42,7 @@ import { EthereumTokensService } from './services/ethereum-tokens.service';
       },
     }),
   ],
-  controllers: [AppController, GrouplistsController, UserController, ExchangeController],
+  controllers: [AppController, GrouplistsController, UserController, ExchangeController, DefiController],
   providers: [
     {
       provide: APP_GUARD,
@@ -59,7 +62,8 @@ import { EthereumTokensService } from './services/ethereum-tokens.service';
     ExchangeService,
     BinanceService,
     BlockchainService,
-    EthereumTokensService
+    EthereumTokensService,
+    DefiService
   ],
 })
 export class AppModule { }

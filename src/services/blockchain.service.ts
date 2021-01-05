@@ -17,6 +17,7 @@ export class BlockchainService {
     private readonly logger = new Logger(BlockchainService.name);
     @InjectRepository(Exchange) private exchangeRepo: Repository<Exchange>;
     @InjectRepository(BinanceOrder) private binanceRepo: Repository<BinanceOrder>;
+    
     constructor(
         private bitcoinService: BitcoinService,
         private ethereumService: EthereumService,
@@ -83,7 +84,7 @@ export class BlockchainService {
                         balance = await this.ethereumService.getBalance(am.chainAddress);
                     case WALLET_TYPE.USDT:
                     case WALLET_TYPE.LINK:
-                        balance = await this.ethereumTokensService.getBalance(am.chainAddress, am);
+                        balance = await this.ethereumTokensService.getBalance(am);
                         break;
                     default:
                         break;
@@ -119,7 +120,7 @@ export class BlockchainService {
                         break;
                     case WALLET_TYPE.USDT:
                     case WALLET_TYPE.LINK:
-                        balance = await this.ethereumTokensService.getBalance(am.chainAddress, am);
+                        balance = await this.ethereumTokensService.getBalance(am);
                         break;
                 }
 

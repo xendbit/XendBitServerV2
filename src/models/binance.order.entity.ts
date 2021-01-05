@@ -37,6 +37,6 @@ export class BinanceOrder {
     @Column({name: 'fetched_coin', width: 1, type: 'tinyint', default: 0})
     fetchedCoin?: boolean;
     
-    @Column({name: 'fetch_coin_date', type: 'bigint', default: new Date().getTime() })
+    @Column({name: 'fetch_coin_date', type: 'bigint'})
     fetchCoinDate?: number;
 }

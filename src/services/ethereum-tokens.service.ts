@@ -30,10 +30,6 @@ export class EthereumTokensService {
         return mappings;
     }
 
-    getToken(wallet: string) {
-
-    }
-
     async history(address: string, contractAddress: string): Promise<History[]> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -50,7 +46,7 @@ export class EthereumTokensService {
                     const txs = parsed.result;
                     for (let tx of txs) {
                         const tokenDecimal = tx.tokenDecimal;
-                        const value = tx.value / (10**tokenDecimal);
+                        const value = tx.value / (10 ** tokenDecimal);
                         const history: History = {
                             date: new Date(tx.timeStamp * 1000).toISOString().substr(0, 10),
                             hash: tx.hash,
@@ -107,13 +103,43 @@ export class EthereumTokensService {
         return am;
     }
 
-    getBalance(address: string, sender: AddressMapping): Promise<number> {
+    getBalance(sender: AddressMapping): Promise<number> {
         return new Promise(async (resolve, reject) => {
             try {
                 const decimals: number = +sender.fees.decimals;
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
-                const balance = await contract.methods.balanceOf(address).call({ from: address });
+                const balance = await contract.methods.balanceOf(sender.chainAddress).call({ from: sender.chainAddress });
                 resolve(Math.round(balance / (10 ** decimals)));
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    approve(sender: AddressMapping, recipient: string, amount: number): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const decimals: number = +sender.fees.decimals;
+                amount = Math.round(amount * (10 ** decimals));
+                const amountHex = this.web3.utils.toHex(amount);
+                const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
+                const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
+
+                const block = await this.web3.eth.getBlock("latest");
+                var rawTransaction: TxData = {
+                    gasPrice: this.web3.utils.toHex(0),
+                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    to: sender.fees.contractAddress,
+                    value: "0x0",
+                    data: contract.methods.approve(recipient, amountHex).encodeABI(),
+                    nonce: this.web3.utils.toHex(nonce),
+                }
+
+                const transaction = new Transaction(rawTransaction);
+                const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
+                transaction.sign(pk);
+                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve(reciept.transactionHash);
             } catch (error) {
                 reject(error);
             }
