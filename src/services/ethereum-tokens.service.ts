@@ -24,8 +24,8 @@ export class EthereumTokensService {
 
     getTokens(ethAM: AddressMapping): AddressMapping[] {
         const mappings: AddressMapping[] = [];
-        mappings.push(this.getUSDT(ethAM));
-        mappings.push(this.getLINK(ethAM));
+        // mappings.push(this.getUSDT(ethAM));
+        // mappings.push(this.getLINK(ethAM));
         return mappings;
     }
 

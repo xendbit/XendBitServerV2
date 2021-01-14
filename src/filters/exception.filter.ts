@@ -11,14 +11,17 @@ export class ExceptionsFilter implements ExceptionFilter {
     const status = HttpStatus.INTERNAL_SERVER_ERROR;
     this.logger.error("Error: " + exception);
     console.dir(exception);
-    let message = exception.message;
-    if(exception.response) {
+    let message = exception;
+    if (exception.message) {
+      message = exception.message;
+    }
+    if (exception.response) {
       message = exception.response.message;
     }
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: request.url,      
+      path: request.url,
       error: message
     });
   }

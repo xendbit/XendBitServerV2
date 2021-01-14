@@ -31,6 +31,8 @@ export class UserService {
         private imageService: ImageService,
         private blockchainService: BlockchainService,
     ) {
+        const passphraseHash = HmacSHA256('Baba fi owo kan idodo omo oni dodo ni dodo ilu wa', process.env.KEY).toString();
+        this.logger.debug(passphraseHash);
     }
 
     async history(address: string, wallet: string): Promise<History[]> {
@@ -49,7 +51,7 @@ export class UserService {
             let user: User = await this.userRepo.createQueryBuilder("user")
                 .where(`${col} = :value`, { value: val })
                 .leftJoinAndSelect("user.addressMappings", "addressMappings")
-                .getOne();            
+                .getOne();
             return user;
         } catch (error) {
             throw error;
@@ -146,6 +148,47 @@ export class UserService {
         });
     }
 
+    recover(lro: LoginRequestObject): Promise<User> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const passphraseHash = HmacSHA256(lro.passphrase, process.env.KEY).toString();
+
+                let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
+
+                if (dbUser === undefined) {
+                    reject("User with email address already not found");
+                }
+
+                if (dbUser.hash !== passphraseHash) {
+                    // dbUser.hash = passphraseHash;
+                    // this.userRepo.save(dbUser); 
+                    reject("Passphrase Hash does not match.");
+                }
+
+                const salt = genSaltSync(12, 'a');
+                const passwordHashed = hashSync(lro.password, salt);
+
+                dbUser.password = passwordHashed;
+
+                if (!dbUser.isActivated) {
+                    reject("Account is not yet activated. Please check your email for instructions on how to activate your account");
+                }
+
+                const ams: AddressMapping[] = [];
+
+                dbUser.addressMappings = await this.blockchainService.getFees(dbUser);
+                const ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
+                    return x.chain === 'ETH';
+                }).chainAddress;
+
+                dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
+                resolve(dbUser);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     login(lro: LoginRequestObject): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -170,13 +213,13 @@ export class UserService {
                     reject("Account is not yet activated. Please check your email for instructions on how to activate your account");
                 }
 
-                const ams: AddressMapping[] = [];                
+                const ams: AddressMapping[] = [];
 
                 dbUser.addressMappings = await this.blockchainService.getFees(dbUser);
                 const ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
                     return x.chain === 'ETH';
                 }).chainAddress;
-                
+
                 dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
                 resolve(dbUser);
             } catch (error) {

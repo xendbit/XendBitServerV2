@@ -30,6 +30,16 @@ export class UserController {
         return ResponseUtils.getSuccessResponse(result, "Login Successful");
     }
 
+    @Post('recover')
+    @Roles('api')
+    async recover(@Body() lro: LoginRequestObject): Promise<Response> {
+        const result = await this.userService.login(lro).catch(error => {
+            throw error;
+        });
+
+        return ResponseUtils.getSuccessResponse(result, "Recover Successful");
+    }    
+
     @Get('confirm-email/:tag')
     async confirmEmail(@Param('tag') tag: string): Promise<string> {
         return await this.userService.confirmEmail(tag);
