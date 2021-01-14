@@ -1,11 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { UserToken } from "./user.tokens.entity";
 
-@Entity({name: 'XB_UNISWAP_TOKEN'})
+@Entity({ name: 'XB_UNISWAP_TOKEN' })
 export class UniswapToken {
     @PrimaryGeneratedColumn()
     id?: number;
 
-    @Column({name: 'chain_id'})
+    @Column({ name: 'chain_id' })
     chainId: number;
     @Column()
     address: string;
@@ -15,6 +16,6 @@ export class UniswapToken {
     symbol: string;
     @Column()
     decimals: number;
-    @Column({name: 'logo_uri'})
+    @Column({ name: 'logo_uri' })
     logoURI: string;
 }

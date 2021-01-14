@@ -5,7 +5,8 @@ import { BinanceOrder } from "src/models/binance.order.entity";
 import { Exchange } from "src/models/exchange.entity";
 import { TradeRequestObject } from "src/models/request.objects/trade.ro";
 import { User } from "src/models/user.entity";
-import { STATUS, WALLET_TYPE } from "src/utils/enums";
+import { UserToken } from "src/models/user.tokens.entity";
+import { STATUS } from "src/utils/enums";
 import { Repository } from "typeorm";
 import { BitcoinService } from "./bitcoin.service";
 import { Config } from "./config.service";
@@ -17,7 +18,8 @@ export class BlockchainService {
     private readonly logger = new Logger(BlockchainService.name);
     @InjectRepository(Exchange) private exchangeRepo: Repository<Exchange>;
     @InjectRepository(BinanceOrder) private binanceRepo: Repository<BinanceOrder>;
-    
+    @InjectRepository(UserToken) private userTokenRepo: Repository<UserToken>;
+
     constructor(
         private bitcoinService: BitcoinService,
         private ethereumService: EthereumService,
@@ -29,13 +31,12 @@ export class BlockchainService {
         return new Promise(async (resolve, reject) => {
             try {
                 switch (sender.chain) {
-                    case WALLET_TYPE.BTC:
+                    case 'BTC':
                         resolve(await this.bitcoinService.send(sender, recipient, amount, xendFees, blockFees));
-                    case WALLET_TYPE.ETH:
+                    case 'ETH':
                         resolve(await this.ethereumService.send(sender, recipient, amount, xendFees, blockFees));
                         break;
-                    case WALLET_TYPE.USDT:
-                    case WALLET_TYPE.LINK:
+                    default:
                         resolve(await this.ethereumTokensService.sendToken(sender, recipient, amount))
                         break;
                 }
@@ -45,21 +46,28 @@ export class BlockchainService {
         });
     }
 
-    async history(address: string, coin: WALLET_TYPE): Promise<History[]> {
+    async history(userId: number, address: string, coin: string): Promise<History[]> {
         return new Promise(async (resolve, reject) => {
             try {
                 switch (coin) {
-                    case WALLET_TYPE.BTC:
+                    case 'BTC':
                         resolve(this.bitcoinService.history(address));
                         break;
-                    case WALLET_TYPE.ETH:
+                    case 'ETH':
                         resolve(this.ethereumService.history(address));
                         break;
-                    case WALLET_TYPE.LINK:
+                    case 'LINK':
                         resolve(this.ethereumTokensService.history(address, this.config.p.LINK["contract.address"]));
                         break;
-                    case WALLET_TYPE.USDT:
+                    case 'USDT':
                         resolve(this.ethereumTokensService.history(address, this.config.p.USDT["contract.address"]));
+                        break;
+                    default:
+                        const userToken: UserToken = await this.userTokenRepo.createQueryBuilder("userToken")
+                            .where("user_id = :uid", { uid: userId })
+                            .andWhere("symbol = :sym", { sym: coin })
+                            .getOne();
+                        resolve(this.ethereumTokensService.history(address, userToken.address));
                         break;
                 }
             } catch (error) {
@@ -77,16 +85,13 @@ export class BlockchainService {
                 });
 
                 switch (wallet) {
-                    case WALLET_TYPE.BTC:
+                    case 'BTC':
                         balance = await this.bitcoinService.getBalance([am.chainAddress]);
                         break;
-                    case WALLET_TYPE.ETH:
+                    case 'ETH':
                         balance = await this.ethereumService.getBalance(am.chainAddress);
-                    case WALLET_TYPE.USDT:
-                    case WALLET_TYPE.LINK:
-                        balance = await this.ethereumTokensService.getBalance(am);
-                        break;
                     default:
+                        balance = await this.ethereumTokensService.getBalance(am);
                         break;
                 }
 
@@ -110,16 +115,15 @@ export class BlockchainService {
                 });
                 //const escrow = await this.getEscrow(wallet, user.id);
                 switch (wallet) {
-                    case WALLET_TYPE.BTC:
+                    case 'BTC':
                         balance = await this.bitcoinService.getBalance([am.chainAddress]);
                         //balance -= escrow;
                         break;
-                    case WALLET_TYPE.ETH:
+                    case 'ETH':
                         balance = await this.ethereumService.getBalance(am.chainAddress);
                         //balance -= escrow;
                         break;
-                    case WALLET_TYPE.USDT:
-                    case WALLET_TYPE.LINK:
+                    default:
                         balance = await this.ethereumTokensService.getBalance(am);
                         break;
                 }
@@ -134,28 +138,57 @@ export class BlockchainService {
         });
     }
 
-    getFees(user: User): AddressMapping[] {
+    async getFees(user: User): Promise<AddressMapping[]> {
         const ams: AddressMapping[] = [];
         let tokenMappings: AddressMapping[] = [];
-        user.addressMappings.forEach(am => {
+        let userTokenMappings: AddressMapping[] = [];
+        for (let am of user.addressMappings) {
             switch (am.chain) {
-                case WALLET_TYPE.BTC:
+                case 'BTC':
                     am.fees = this.bitcoinService.getFees(am);
                     break;
-                case WALLET_TYPE.ETH:
+                case 'ETH':
                     am.fees = this.ethereumService.getFees(am);
                     tokenMappings = this.ethereumTokensService.getTokens(am);
+                    userTokenMappings = await this.getUserTokens(user.id, am);
                     break;
             }
             ams.push(am);
-        });
+        };
 
         tokenMappings.forEach(tm => {
             ams.push(tm);
         });
 
+        userTokenMappings.forEach(utm => {
+            ams.push(utm);
+        });
+
         return ams;
     }
+
+    async getUserTokens(userId: number, ethAM: AddressMapping): Promise<AddressMapping[]> {
+        return new Promise(async (resolve, reject) => {
+            try {
+
+                const userTokens: UserToken[] = await this.userTokenRepo.createQueryBuilder("userToken")
+                    .where("user_id = :uid", { uid: userId })
+                    .getMany();
+                const ams: AddressMapping[] = [];
+                for (let ut of userTokens) {
+                    let am = this.ethereumTokensService.getGenericToken(ethAM, ut.symbol, ut.decimals, ut.address);
+                    am.fees.logoURI = ut.logoURI;
+                    ams.push(am);
+                }
+
+                resolve(ams);
+            } catch (error) {
+                reject(error);
+            }
+        });
+
+    }
+
 
     async getEscrow(coin: string, sellerId): Promise<number> {
         return new Promise(async (resolve, reject) => {
@@ -189,18 +222,17 @@ export class BlockchainService {
         return new Promise(async (resolve, reject) => {
             try {
                 switch (tro.fromCoin) {
-                    case WALLET_TYPE.BTC:
+                    case 'BTC':
                         await this.bitcoinService.send(sender, depositAddress, tro.amountToSpend, tro.xendFees, tro.blockFees);
                         bo.status = STATUS.SENT_TO_BINANCE;
                         bo = await this.binanceRepo.save(bo);
                         break;
-                    case WALLET_TYPE.ETH:
+                    case 'ETH':
                         await this.ethereumService.send(sender, depositAddress, tro.amountToSpend, tro.xendFees, tro.blockFees);
                         bo.status = STATUS.SENT_TO_BINANCE;
                         bo = await this.binanceRepo.save(bo);
                         break;
-                    case WALLET_TYPE.USDT:
-                    case WALLET_TYPE.LINK:
+                    default:
                         await this.ethereumTokensService.sendToken(sender, depositAddress, tro.amountToSpend);
                         bo.status = STATUS.SENT_TO_BINANCE;
                         bo = await this.binanceRepo.save(bo);

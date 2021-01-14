@@ -4,7 +4,6 @@ import Web3 from 'web3';
 import { Config } from './config.service';
 import { Transaction, TxData } from 'ethereumjs-tx';
 import { AES, enc } from 'crypto-js';
-import { WALLET_TYPE } from 'src/utils/enums';
 import { HttpClient } from 'typed-rest-client/HttpClient';
 import { History } from './blockchain.service';
 import { EthereumService } from './ethereum.service';
@@ -67,7 +66,7 @@ export class EthereumTokensService {
 
     getUSDT(ethAM: AddressMapping): AddressMapping {
         const am: AddressMapping = { ...ethAM };
-        am.chain = WALLET_TYPE.USDT;
+        am.chain = 'USDT';
         am.fees = {
             minXendFees: this.config.p["USDT"]["min.xend.fees"],
             minBlockFees: this.config.p["USDT"]["min.block.fees"],
@@ -84,9 +83,28 @@ export class EthereumTokensService {
         return am;
     }
 
+    getGenericToken(ethAM: AddressMapping, chain: string, decimals: number, contractAddress: string): AddressMapping {
+        const am: AddressMapping = { ...ethAM };
+        am.chain = chain;
+        am.fees = {
+            minXendFees: this.config.p["USDT"]["min.xend.fees"],
+            minBlockFees: this.config.p["USDT"]["min.block.fees"],
+            externalDepositFees: -1,
+            percExternalTradingFees: -1,
+            externalWithdrawalFees: -1,
+            maxXendFees: this.config.p["USDT"]["max.xend.fees"],
+            percXendFees: this.config.p["USDT"]["perc.xend.fees"],
+            decimals: decimals,
+            minBuyAmount: this.config.p.USDT['min.buy.amount'],
+            contractAddress: contractAddress,
+        }
+
+        return am;
+    }
+
     getLINK(ethAM: AddressMapping): AddressMapping {
         const am: AddressMapping = { ...ethAM };
-        am.chain = WALLET_TYPE.LINK;
+        am.chain = 'LINK';
         am.fees = {
             minXendFees: this.config.p["LINK"]["min.xend.fees"],
             minBlockFees: this.config.p["LINK"]["min.block.fees"],
@@ -120,8 +138,9 @@ export class EthereumTokensService {
         return new Promise(async (resolve, reject) => {
             try {
                 const decimals: number = +sender.fees.decimals;
-                amount = Math.round(amount * (10 ** decimals));
-                const amountHex = this.web3.utils.toHex(amount);
+                let amountIsh = (amount * (10 ** decimals)).toLocaleString();
+                amountIsh = amountIsh.split(',').join('');
+                const amountHex = this.web3.utils.toHex(amountIsh);
                 const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
 
@@ -138,8 +157,8 @@ export class EthereumTokensService {
                 const transaction = new Transaction(rawTransaction);
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
-                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
-                resolve(reciept.transactionHash);
+                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve("Success");
             } catch (error) {
                 reject(error);
             }
@@ -150,8 +169,9 @@ export class EthereumTokensService {
         return new Promise(async (resolve, reject) => {
             try {
                 const decimals: number = +sender.fees.decimals;
-                amount = Math.round(amount * (10 ** decimals));
-                const amountHex = this.web3.utils.toHex(amount);
+                let amountIsh = (amount * (10 ** decimals)).toLocaleString();
+                amountIsh = amountIsh.split(',').join('');
+                const amountHex = this.web3.utils.toHex(amountIsh);
                 const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
 
@@ -168,8 +188,8 @@ export class EthereumTokensService {
                 const transaction = new Transaction(rawTransaction);
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
-                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
-                resolve(reciept.transactionHash);
+                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                resolve("Success");
             } catch (error) {
                 reject(error);
             }

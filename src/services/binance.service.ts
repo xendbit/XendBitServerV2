@@ -6,7 +6,7 @@ import { User } from 'src/models/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BinanceOrder } from 'src/models/binance.order.entity';
 import { Repository } from 'typeorm';
-import { STATUS, WALLET_TYPE } from 'src/utils/enums';
+import { STATUS } from 'src/utils/enums';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { XendChainService } from './xendchain.service';
 import { BlockchainService } from './blockchain.service';
@@ -77,7 +77,7 @@ export class BinanceService {
 
                     // withdraw it    
                     const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                        return x.chain === WALLET_TYPE[bo.coin];
+                        return x.chain === bo.coin;
                     });
 
                     const wr: WithrawResponse = await this.client.withdraw({
@@ -130,13 +130,13 @@ export class BinanceService {
                 const depositAddress = await this.client.depositAddress({ asset: bo.coin });
 
                 const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === WALLET_TYPE.ETH;
+                    return x.chain === 'ETH';
                 });
 
                 this.client.ws.user(async (msg) => {
                     if (msg.eventType === "balanceUpdate") {
                         try {
-                            if (WALLET_TYPE[msg.asset] === tro.fromCoin) {
+                            if (msg.asset === tro.fromCoin) {
                                 if (+msg.balanceDelta === bo.quantity) {
                                     bo = await this.binanceRepo.createQueryBuilder("binanceOrder")
                                         .where("client_id = :cid", { cid: bo.clientId })

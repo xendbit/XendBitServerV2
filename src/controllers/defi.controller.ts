@@ -14,6 +14,11 @@ export class DefiController {
         return ResponseUtils.getSuccessResponse(await this.defiService.getAllTokens(reload === "true"));
     }
 
+    @Get('get-price/:from/:to')
+    async getPrice(@Param("from") from: string, @Param("to") to: string): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.defiService.getPrice(from, to));
+    }    
+
     @Post('swap')
     @Roles('api')
     async swap(@Body() stro: SwapTokenRequestObject): Promise<Response> {

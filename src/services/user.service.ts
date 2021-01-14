@@ -1,15 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { rejects } from 'assert';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { AES, enc, HmacSHA256 } from 'crypto-js';
 import { AddressMapping } from 'src/models/address.mapping.entity';
-import { Exchange } from 'src/models/exchange.entity';
 import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
 import { User } from 'src/models/user.entity';
 import { BitcoinService } from 'src/services/bitcoin.service';
-import { WALLET_TYPE } from 'src/utils/enums';
 import { Repository } from 'typeorm';
 import { BlockchainService, History } from './blockchain.service';
 import { EmailService } from './email.service';
@@ -39,9 +36,8 @@ export class UserService {
     async history(address: string, wallet: string): Promise<History[]> {
         return new Promise(async (resolve, reject) => {
             try {
-
-                const coin = WALLET_TYPE[wallet];
-                resolve(this.blockchainService.history(address, coin));
+                const user: User = await this.findByColumn("xend_network_address", address);
+                resolve(this.blockchainService.history(user.id, address, wallet));
             } catch (error) {
                 reject(error);
             }
@@ -79,7 +75,7 @@ export class UserService {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
-                user.addressMappings = this.blockchainService.getFees(user);
+                user.addressMappings = await this.blockchainService.getFees(user);
                 resolve(await this.blockchainService.getBalance(wallet, user));
             } catch (error) {
                 reject(error);
@@ -110,7 +106,7 @@ export class UserService {
                 }
 
                 const am: AddressMapping = dbUser.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === WALLET_TYPE.ETH;
+                    return x.chain === 'ETH';
                 });
 
                 amount = Math.round(amount);
@@ -142,7 +138,7 @@ export class UserService {
 
                 const ams: AddressMapping[] = [];
 
-                dbUser.addressMappings = this.blockchainService.getFees(dbUser);
+                dbUser.addressMappings = await this.blockchainService.getFees(dbUser);
                 resolve(dbUser);
             } catch (error) {
                 reject(error);
@@ -174,13 +170,13 @@ export class UserService {
                     reject("Account is not yet activated. Please check your email for instructions on how to activate your account");
                 }
 
-                const ams: AddressMapping[] = [];
+                const ams: AddressMapping[] = [];                
 
-                dbUser.addressMappings = this.blockchainService.getFees(dbUser);
+                dbUser.addressMappings = await this.blockchainService.getFees(dbUser);
                 const ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === WALLET_TYPE.ETH;
+                    return x.chain === 'ETH';
                 }).chainAddress;
-
+                
                 dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
                 resolve(dbUser);
             } catch (error) {

@@ -11,7 +11,7 @@ import { BlockchainService } from './blockchain.service';
 import { Config } from './config.service';
 import { UserService } from './user.service';
 import { XendChainService } from './xendchain.service';
-import { STATUS, WALLET_TYPE } from 'src/utils/enums';
+import { STATUS } from 'src/utils/enums';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrdersRequest } from 'src/models/request.objects/orders.ro';
@@ -37,6 +37,7 @@ export class ExchangeService {
 
                 const ngnRate: number = await this.binanceService.getPrice(wallet, 'NGN');
 
+
                 if (wallet.toUpperCase() === 'USDT') {
                     resolve({
                         'ngnRate': ngnRate,
@@ -44,7 +45,19 @@ export class ExchangeService {
                     });
                 }
 
-                const usdRate: number = await this.binanceService.getPrice(wallet, 'USDT');
+                let usdRate: number = await this.binanceService.getPrice(wallet, 'USDT');
+
+                let markupRate = 0.05;
+                switch(side) {
+                    case 'BUY':
+                        markupRate = +this.config.p['xend.markup'] / 100.0;
+                        break;
+                    case 'SELL':
+                        markupRate = (+this.config.p['xend.markup'] / 100.0) * -1;
+                        break;                        
+                }
+
+                usdRate = usdRate + (usdRate * markupRate);
                 resolve({
                     'ngnRate': ngnRate,
                     'usdRate': usdRate
@@ -63,7 +76,7 @@ export class ExchangeService {
             try {
                 const user: User = await this.userService.loginNoHash(sco.emailAddress, sco.password);
                 const addressMapping: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === WALLET_TYPE[sco.fromCoin];
+                    return x.chain === sco.fromCoin;
                 });
                 if (await this.blockchainService.checkBalance(sco.fromCoin, user, sco.amountToSend)) {
                     await this.bitcoinService.send(addressMapping, sco.buyerToAddress, sco.amountToSend, sco.xendFees, sco.blockFees);
@@ -85,7 +98,7 @@ export class ExchangeService {
             try {
                 const user: User = await this.userService.loginNoHash(tro.emailAddress, tro.password);
                 const ethAM: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === WALLET_TYPE.ETH
+                    return x.chain === 'ETH';
                 });
 
                 if (await this.xendService.checkNgncBalance(ethAM.chainAddress, tro.amountToSpend)) {

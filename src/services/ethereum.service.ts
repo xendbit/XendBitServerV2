@@ -3,13 +3,11 @@ import { mnemonicToSeedSync } from 'bip39';
 import { AES, enc } from 'crypto-js';
 import { hdkey } from 'ethereumjs-wallet';
 import { AddressMapping } from 'src/models/address.mapping.entity';
-import { WALLET_TYPE } from 'src/utils/enums';
 import Web3 from 'web3';
 import { Config } from './config.service';
 import { Transaction, TxData } from 'ethereumjs-tx';
 import { HttpClient } from 'typed-rest-client/HttpClient';
 import { History } from './blockchain.service';
-import { BitcoinService } from './bitcoin.service';
 
 @Injectable()
 export class EthereumService {
@@ -25,7 +23,7 @@ export class EthereumService {
     }
 
     async getBalance(address: string): Promise<number> {
-        return this.web3.eth.getBalance(address);
+        return +this.web3.utils.fromWei(await this.web3.eth.getBalance(address), 'ether').toString();
     }
 
     async history(address: string): Promise<History[]> {
@@ -64,8 +62,9 @@ export class EthereumService {
                 const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
 
                 const block = await this.web3.eth.getBlock("latest");
+                const gasUsed = block.gasUsed / block.transactions.length;
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(block.gasUsed),
+                    gasPrice: this.web3.utils.toHex(gasUsed),
                     gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: recipient,
                     value: this.web3.utils.toWei(amount, "ether"),
@@ -76,10 +75,9 @@ export class EthereumService {
                 const transaction = new Transaction(rawTransaction);
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
-                const reciept = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
-                resolve(reciept.transactionHash);
+                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
 
-                resolve(reciept.transactionHash);
+                resolve("Success");
             } catch (error) {
                 reject(error);
             }
@@ -96,7 +94,7 @@ export class EthereumService {
 
         const encWif = AES.encrypt(pk, process.env.KEY).toString();
         const am: AddressMapping = {
-            chain: WALLET_TYPE.ETH,
+            chain: 'ETH',
             chainAddress: addrNode.getWallet().getAddressString(),
             mnemonicCode: passphrase,
             wif: encWif,

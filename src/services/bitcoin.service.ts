@@ -6,7 +6,6 @@ import { AES, enc } from "crypto-js";
 import { Injectable, Logger } from "@nestjs/common";
 import { ImportAddressParams, ListUnspentParams, RPCClient } from 'rpc-bitcoin';
 import { BitcoinTransaction } from "src/models/bitcoin.transaction";
-import { WALLET_TYPE } from "src/utils/enums";
 import { HttpClient } from "typed-rest-client/HttpClient";
 import { History } from "./blockchain.service";
 
@@ -170,7 +169,7 @@ export class BitcoinService {
 
         const encWif = AES.encrypt(wif, process.env.KEY).toString();
         const am: AddressMapping = {
-            chain: WALLET_TYPE.BTC,
+            chain: 'BTC',
             chainAddress: address,
             mnemonicCode: passphrase,
             wif: encWif,

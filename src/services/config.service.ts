@@ -7,7 +7,9 @@ export class Config {
         "bitcoin.testnet": false,
         "xendcredit.api.url": "https://xendcredit-prod.herokuapp.com",
         "xendchain.server.url": "https://lb.xendbit.net/geth",
-        "ethereum.server.url": "https://mainnet.infura.io/v3/3fa594a20e104a479791fc67c5f4afef",
+        //"ethereum.server.url": "https://mainnet.infura.io/v3/3fa594a20e104a479791fc67c5f4afef",
+        //"ethereum.server.url": "https://ropsten.infura.io/v3/3fa594a20e104a479791fc67c5f4afef",
+        "ethereum.server.url": "https://data-seed-prebsc-1-s1.binance.org:8545/",
         "bitcoin.server.url": "http://45.77.90.120",
         "bitcoin.port": 8332,
         "bitcoin.timeout": 120000,
@@ -19,6 +21,7 @@ export class Config {
         "erc20.history.api.url": "https://api.etherscan.io/api?module=account&action=tokentx&",
         "uniswap.router.contract": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
         "uniswap.tokens.list.url": "https://tokens.coingecko.com/uniswap/all.json",
+        "xend.markup": 0.5,
         "BTC": {
             "min.xend.fees": 5.0,
             "min.block.fees": 0.00005,
