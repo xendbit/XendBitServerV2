@@ -19,7 +19,7 @@ import { UserToken } from 'src/models/user.tokens.entity';
 @Injectable()
 export class DefiService {
     private readonly logger = new Logger(DefiService.name);
-    private chainId: number;    
+    private chainId: number;
     private web3: Web3;
     private uniswapRouter02Abi;
     private uniswapRouter02Address;
@@ -64,6 +64,8 @@ export class DefiService {
                 const path: string[] = route.path.map((value, _index, _array) => {
                     return value.address;
                 });
+
+                this.logger.debug(`Path: ${path}`);
 
                 const oneToToken = 1 * (10 ** toToken.decimals) + "";
 
@@ -183,11 +185,10 @@ export class DefiService {
                     return value.address;
                 });
 
-                const thirtyMinutes = Math.round((new Date().getTime() + (30 * 60 * 1000)) / 1000);
-                const gasUsed = block.gasUsed / block.transactions.length;
+                const thirtyMinutes = Math.round((new Date().getTime() + (30 * 60 * 1000)) / 1000);                
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    gasPrice: this.web3.utils.toHex("112000000000"),
+                    gasLimit: this.web3.utils.toHex("3000000"),
                     to: this.uniswapRouter02Address,
                     value: "0x0",
                     data: contract.methods.swapExactTokensForTokens(amountInIsh, amountOutMin, path, sender.chainAddress, thirtyMinutes).encodeABI(),
@@ -197,7 +198,7 @@ export class DefiService {
                 const transaction = new Transaction(rawTransaction, { chain: this.chainId });
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
-                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
 
                 // saveUserToken
                 await this.saveUserToken(toToken, sender);
@@ -238,10 +239,10 @@ export class DefiService {
                 });
 
                 const thirtyMinutes = Math.round((new Date().getTime() + (30 * 60 * 1000)) / 1000);
-                const gasUsed = block.gasUsed / block.transactions.length;
+                
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    gasPrice: this.web3.utils.toHex("112000000000"),
+                    gasLimit: this.web3.utils.toHex("3000000"),
                     to: this.uniswapRouter02Address,
                     value: this.web3.utils.toHex(amountInIsh),
                     data: contract.methods.swapExactETHForTokens(amountOutMin, path, sender.chainAddress, thirtyMinutes).encodeABI(),
@@ -251,7 +252,7 @@ export class DefiService {
                 const transaction = new Transaction(rawTransaction, { chain: this.chainId });
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
-                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
 
                 // saveUserToken
                 await this.saveUserToken(toToken, sender);
@@ -276,7 +277,7 @@ export class DefiService {
                     const uniswapToken: UniswapToken = await this.uniswapTokenRepo.createQueryBuilder("uniswapToken")
                         .where("address = :add", { add: fromToken.address })
                         .getOne();
-                        //TODO: Uncomment
+                    //TODO: Uncomment
                     throw Error(`You don't have enough ${uniswapToken.symbol} to complete this transaction`);
                 }
 
@@ -303,10 +304,10 @@ export class DefiService {
                 });
 
                 const thirtyMinutes = Math.round((new Date().getTime() + (30 * 60 * 1000)) / 1000);
-                const gasUsed = block.gasUsed / block.transactions.length;
+                
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    gasPrice: this.web3.utils.toHex("112000000000"),
+                    gasLimit: this.web3.utils.toHex("3000000"),
                     to: this.uniswapRouter02Address,
                     value: "0x0",
                     data: contract.methods.swapExactTokensForETH(amountInIsh, amountOutMin, path, sender.chainAddress, thirtyMinutes).encodeABI(),
@@ -317,7 +318,7 @@ export class DefiService {
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
                 this.logger.debug(transaction.serialize().toString('hex'));
-                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
 
                 resolve("Success");
             } catch (error) {

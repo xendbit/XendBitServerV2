@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
-import { AES, enc, HmacSHA256 } from 'crypto-js';
+import { AES, enc, SHA256 } from 'crypto-js';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { BlockchainService, History } from './blockchain.service';
 import { EmailService } from './email.service';
 import { EthereumService } from './ethereum.service';
+import { GrouplistsService } from './grouplists.service';
 import { ImageService } from './image.service';
 import { MoneyWaveService } from './money-wave.service';
 import { ProvidusBankService } from './providus-bank.service';
@@ -30,8 +31,14 @@ export class UserService {
         private emailService: EmailService,
         private imageService: ImageService,
         private blockchainService: BlockchainService,
+        private grouplistsService: GrouplistsService,
     ) {
-        const passphraseHash = HmacSHA256('Baba fi owo kan idodo omo oni dodo ni dodo ilu wa', process.env.KEY).toString();
+
+        const pp = "suffice cactus ecstatic boldly hate magically slap answers course thank heal layout";
+        const tt = grouplistsService.get13thWord({passphrase: pp});
+
+        const passphraseHash = Buffer.from(SHA256(pp + ' ' + tt).toString()).toString('base64');
+        //const passphraseHash = Buffer.from(SHA256('Baba fi owo kan idodo omo oni dodo ni dodo ilu wa').toString()).toString('base64');
         this.logger.debug(passphraseHash);
     }
 
@@ -151,7 +158,8 @@ export class UserService {
     recover(lro: LoginRequestObject): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
-                const passphraseHash = HmacSHA256(lro.passphrase, process.env.KEY).toString();
+                lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });
+                const passphraseHash = Buffer.from(SHA256(lro.passphrase).toString()).toString('base64');
 
                 let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
 
@@ -192,7 +200,8 @@ export class UserService {
     login(lro: LoginRequestObject): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
-                const passphraseHash = HmacSHA256(lro.passphrase, process.env.KEY).toString();
+                lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });
+                const passphraseHash = Buffer.from(SHA256(lro.passphrase).toString()).toString('base64');
                 let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
 
                 if (dbUser === undefined) {
@@ -233,7 +242,7 @@ export class UserService {
             try {
                 const salt = genSaltSync(12, 'a');
                 const passwordHashed = hashSync(uro.password, salt);
-                const passphraseHash = HmacSHA256(uro.passphrase, process.env.KEY).toString();
+                const passphraseHash = Buffer.from(SHA256(uro.passphrase).toString()).toString('base64');
 
                 let dbUser = await this.findByColumn("EMAIL", uro.emailAddress);
                 if (dbUser !== undefined) {

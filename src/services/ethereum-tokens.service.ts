@@ -6,7 +6,6 @@ import { Transaction, TxData } from 'ethereumjs-tx';
 import { AES, enc } from 'crypto-js';
 import { HttpClient } from 'typed-rest-client/HttpClient';
 import { History } from './blockchain.service';
-import { EthereumService } from './ethereum.service';
 
 @Injectable()
 export class EthereumTokensService {
@@ -24,8 +23,9 @@ export class EthereumTokensService {
 
     getTokens(ethAM: AddressMapping): AddressMapping[] {
         const mappings: AddressMapping[] = [];
-        // mappings.push(this.getUSDT(ethAM));
-        // mappings.push(this.getLINK(ethAM));
+        mappings.push(this.getUSDT(ethAM));
+        mappings.push(this.getLINK(ethAM));
+        mappings.push(this.getBNB(ethAM));
         return mappings;
     }
 
@@ -62,6 +62,26 @@ export class EthereumTokensService {
                 reject(error);
             }
         });
+    }
+
+    getBNB(ethAM: AddressMapping): AddressMapping {
+        const am: AddressMapping = { ...ethAM };
+        am.chain = 'BNB';
+        am.fees = {
+            minXendFees: this.config.p["BNB"]["min.xend.fees"],
+            minBlockFees: this.config.p["BNB"]["min.block.fees"],
+            externalDepositFees: this.config.p["BNB"]["external.deposit.fees"],
+            percExternalTradingFees: this.config.p["BNB"]["perc.external.trading.fees"],
+            externalWithdrawalFees: this.config.p["BNB"]["external.withdrawal.fees"],
+            maxXendFees: this.config.p["BNB"]["max.xend.fees"],
+            percXendFees: this.config.p["BNB"]["perc.xend.fees"],
+            decimals: this.config.p.BNB.decimals,
+            minBuyAmount: this.config.p.BNB['min.buy.amount'],
+            contractAddress: this.config.p.BNB['contract.address'],
+            logoURI: 'https://cryptologos.cc/logos/binance-coin-bnb-logo.png',
+        }
+
+        return am;        
     }
 
     getUSDT(ethAM: AddressMapping): AddressMapping {
@@ -145,8 +165,9 @@ export class EthereumTokensService {
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
+                const gasUsed = Math.round((block.gasUsed / block.transactions.length));
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(0),
+                    gasPrice: this.web3.utils.toHex(gasUsed),
                     gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: sender.fees.contractAddress,
                     value: "0x0",
@@ -157,7 +178,7 @@ export class EthereumTokensService {
                 const transaction = new Transaction(rawTransaction);
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
-                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
                 resolve("Success");
             } catch (error) {
                 reject(error);
@@ -176,8 +197,9 @@ export class EthereumTokensService {
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
+                const gasUsed = Math.round((block.gasUsed / block.transactions.length));
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(0),
+                    gasPrice: this.web3.utils.toHex(gasUsed),
                     gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: sender.fees.contractAddress,
                     value: "0x0",
@@ -188,7 +210,7 @@ export class EthereumTokensService {
                 const transaction = new Transaction(rawTransaction);
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
-                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
                 resolve("Success");
             } catch (error) {
                 reject(error);

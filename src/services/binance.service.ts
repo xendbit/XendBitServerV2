@@ -33,6 +33,7 @@ export class BinanceService {
 
     async getPrice(chain: string, currency: string): Promise<number> {
         const symbol = `${chain.toUpperCase()}${currency.toUpperCase()}`
+        this.logger.debug(`Getting Price for Symbol: ${symbol}`);
         const result = await this.client.prices({ symbol: symbol });
         return +result[symbol];
     }

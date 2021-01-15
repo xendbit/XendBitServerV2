@@ -34,10 +34,7 @@ export class ExchangeService {
     async usdRate(wallet: string, side: string): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
-
                 const ngnRate: number = await this.binanceService.getPrice(wallet, 'NGN');
-
-
                 if (wallet.toUpperCase() === 'USDT') {
                     resolve({
                         'ngnRate': ngnRate,

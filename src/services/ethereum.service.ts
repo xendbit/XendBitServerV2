@@ -62,7 +62,7 @@ export class EthereumService {
                 const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
 
                 const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = block.gasUsed / block.transactions.length;
+                const gasUsed = Math.round((block.gasUsed / block.transactions.length));
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(gasUsed),
                     gasLimit: this.web3.utils.toHex(block.gasLimit),
@@ -75,7 +75,7 @@ export class EthereumService {
                 const transaction = new Transaction(rawTransaction);
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
-                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
 
                 resolve("Success");
             } catch (error) {
