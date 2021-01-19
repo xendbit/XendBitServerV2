@@ -38,6 +38,8 @@ export class UserService {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
+                user.addressMappings = await this.blockchainService.getFees(user);
+
                 const address = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain === wallet;
                 }).chainAddress;
