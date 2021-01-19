@@ -76,7 +76,7 @@ export class ExchangeService {
                     return x.chain === sco.fromCoin;
                 });
                 if (await this.blockchainService.checkBalance(sco.fromCoin, user, sco.amountToSend)) {
-                    await this.bitcoinService.send(addressMapping, sco.buyerToAddress, sco.amountToSend, sco.xendFees, sco.blockFees);
+                    await this.blockchainService.sendToken(addressMapping, sco.buyerToAddress, sco.amountToSend, sco.xendFees, sco.blockFees);
                 }
 
                 resolve('ok');

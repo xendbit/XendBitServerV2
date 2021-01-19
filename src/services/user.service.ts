@@ -32,15 +32,7 @@ export class UserService {
         private imageService: ImageService,
         private blockchainService: BlockchainService,
         private grouplistsService: GrouplistsService,
-    ) {
-
-        const pp = "suffice cactus ecstatic boldly hate magically slap answers course thank heal layout";
-        const tt = grouplistsService.get13thWord({passphrase: pp});
-
-        const passphraseHash = Buffer.from(SHA256(pp + ' ' + tt).toString()).toString('base64');
-        //const passphraseHash = Buffer.from(SHA256('Baba fi owo kan idodo omo oni dodo ni dodo ilu wa').toString()).toString('base64');
-        this.logger.debug(passphraseHash);
-    }
+    ) {}
 
     async history(address: string, wallet: string): Promise<History[]> {
         return new Promise(async (resolve, reject) => {
@@ -200,17 +192,20 @@ export class UserService {
     login(lro: LoginRequestObject): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
-                lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });
+                this.logger.debug(this.grouplistsService.get13thWord({ passphrase: lro.passphrase }));
+                lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });                
                 const passphraseHash = Buffer.from(SHA256(lro.passphrase).toString()).toString('base64');
                 let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
+
+                this.logger.debug(lro.passphrase);
+                this.logger.debug(passphraseHash);
 
                 if (dbUser === undefined) {
                     reject("User with email address already not found");
                 }
 
                 if (dbUser.hash !== passphraseHash) {
-                    // dbUser.hash = passphraseHash;
-                    // this.userRepo.save(dbUser); 
+
                     reject("Wallet Data Corrupted. Use the recover button to recover your wallet");
                 }
 

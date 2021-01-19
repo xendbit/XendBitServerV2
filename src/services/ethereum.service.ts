@@ -19,9 +19,9 @@ export class EthereumService {
     constructor(private config: Config) {
         this.web3 = new Web3(this.config.p["ethereum.server.url"]);
         this.httpService = new HttpClient('Blockchain.info API');
-        this.logger.debug(AES.decrypt('U2FsdGVkX18Y43DB1E5MzYcD6Ga+Pfzr0WM0AN+YqcGdqYd/vsyvw7865v7tZ70xH85x1C4AYFP6LxmI3Pkp3+2TDxZhBv9+EHn3975I9e+ietvUk7PiA/SJeLuQ5EC8', process.env.KEY).toString(enc.Utf8));
-        this.logger.debug(AES.encrypt('afield juvenile pancakes waking wetsuit agree generation nocturnal physical envy nirvana random juvenile', process.env.KEY).toString());
-        this.logger.debug(Buffer.from(SHA256('afield juvenile pancakes waking wetsuit agree generation nocturnal physical envy nirvana random juvenile').toString()).toString('base64'));
+        // this.logger.debug(AES.decrypt('U2FsdGVkX18Y43DB1E5MzYcD6Ga+Pfzr0WM0AN+YqcGdqYd/vsyvw7865v7tZ70xH85x1C4AYFP6LxmI3Pkp3+2TDxZhBv9+EHn3975I9e+ietvUk7PiA/SJeLuQ5EC8', process.env.KEY).toString(enc.Utf8));
+        // this.logger.debug(AES.encrypt('Baba fi owo kan idodo omo oni dodo ni dodo ilu wa fi', process.env.KEY).toString());
+        // this.logger.debug(Buffer.from(SHA256('Baba fi owo kan idodo omo oni dodo ni dodo ilu wa fi').toString()).toString('base64'));
     }
 
     async getBalance(address: string): Promise<number> {
@@ -63,17 +63,14 @@ export class EthereumService {
             try {
                 const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
 
-                const block = await this.web3.eth.getBlock("latest");
-                const gasUsed = Math.round((block.gasUsed / block.transactions.length));
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(gasUsed),
-                    gasLimit: this.web3.utils.toHex(block.gasLimit),
+                    gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: recipient,
                     value: this.web3.utils.toWei(amount, "ether"),
                     nonce: this.web3.utils.toHex(nonce)
                 }
-
-
+                
                 const transaction = new Transaction(rawTransaction);
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
