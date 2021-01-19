@@ -34,10 +34,14 @@ export class UserService {
         private grouplistsService: GrouplistsService,
     ) { }
 
-    async history(address: string, wallet: string): Promise<History[]> {
+    async history(id: number, wallet: string): Promise<History[]> {
         return new Promise(async (resolve, reject) => {
             try {
-                const user: User = await this.findByColumn("xend_network_address", address);
+                const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
+                const address = user.addressMappings.find((x: AddressMapping) => {
+                    return x.chain === wallet;
+                }).chainAddress;
+
                 resolve(this.blockchainService.history(user.id, address, wallet));
             } catch (error) {
                 reject(error);
