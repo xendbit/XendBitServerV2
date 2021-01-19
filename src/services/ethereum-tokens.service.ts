@@ -169,7 +169,7 @@ export class EthereumTokensService {
 
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
-                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    gasLimit: this.web3.utils.toHex(process.env.TOKENS_GAS_LIMIT),
                     to: sender.fees.contractAddress,
                     value: "0x0",
                     data: contract.methods.approve(recipient, amountHex).encodeABI(),
@@ -199,7 +199,7 @@ export class EthereumTokensService {
                 
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
-                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    gasLimit: this.web3.utils.toHex(process.env.TOKENS_TOKENS_GAS_LIMIT),
                     to: sender.fees.contractAddress,
                     value: "0x0",
                     data: contract.methods.transfer(recipient, amountHex).encodeABI(),

@@ -188,7 +188,7 @@ export class DefiService {
                 const thirtyMinutes = Math.round((new Date().getTime() + (30 * 60 * 1000)) / 1000);                
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
-                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    gasLimit: this.web3.utils.toHex(process.env.DEFI_GAS_LIMIT),
                     to: this.uniswapRouter02Address,
                     value: "0x0",
                     data: contract.methods.swapExactTokensForTokens(amountInIsh, amountOutMin, path, sender.chainAddress, thirtyMinutes).encodeABI(),
@@ -242,7 +242,7 @@ export class DefiService {
                 
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
-                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    gasLimit: this.web3.utils.toHex(process.env.DEFI_GAS_LIMIT),
                     to: this.uniswapRouter02Address,
                     value: this.web3.utils.toHex(amountInIsh),
                     data: contract.methods.swapExactETHForTokens(amountOutMin, path, sender.chainAddress, thirtyMinutes).encodeABI(),
@@ -307,7 +307,7 @@ export class DefiService {
                 
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
-                    gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                    gasLimit: this.web3.utils.toHex(process.env.DEFI_GAS_LIMIT),
                     to: this.uniswapRouter02Address,
                     value: "0x0",
                     data: contract.methods.swapExactTokensForETH(amountInIsh, amountOutMin, path, sender.chainAddress, thirtyMinutes).encodeABI(),
