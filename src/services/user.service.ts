@@ -32,7 +32,7 @@ export class UserService {
         private imageService: ImageService,
         private blockchainService: BlockchainService,
         private grouplistsService: GrouplistsService,
-    ) {}
+    ) { }
 
     async history(address: string, wallet: string): Promise<History[]> {
         return new Promise(async (resolve, reject) => {
@@ -193,20 +193,40 @@ export class UserService {
         return new Promise(async (resolve, reject) => {
             try {
                 this.logger.debug(this.grouplistsService.get13thWord({ passphrase: lro.passphrase }));
-                lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });                
+                lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });
                 const passphraseHash = Buffer.from(SHA256(lro.passphrase).toString()).toString('base64');
                 let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
 
-                this.logger.debug(lro.passphrase);
                 this.logger.debug(passphraseHash);
 
                 if (dbUser === undefined) {
                     reject("User with email address already not found");
                 }
+                
+                let ethAddress: string = undefined;
+                try {
+                     ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
+                        return x.chain === 'ETH';
+                    }).chainAddress;
+                } catch (error) {
+                    // if we got here...the user don't have data in AddressMappings. create one.
+                    const bitcoinAM = this.btcUtils.getBitcoinAddress(lro.passphrase);
+                    bitcoinAM.mnemonicCode = passphraseHash;
+                    const ethereumAM = this.ethUtils.getEthereumAddress(lro.passphrase);
+                    ethereumAM.mnemonicCode = passphraseHash; 
+                    bitcoinAM.user = dbUser;
+                    ethereumAM.user = dbUser;    
+                    await this.amRepo.save(bitcoinAM);
+                    await this.amRepo.save(ethereumAM);    
+                    dbUser.addressMappings = [];
+                    dbUser.addressMappings.push(bitcoinAM);
+                    dbUser.addressMappings.push(ethereumAM);    
+                }
 
                 if (dbUser.hash !== passphraseHash) {
-
-                    reject("Wallet Data Corrupted. Use the recover button to recover your wallet");
+                    dbUser.hash = passphraseHash;
+                    dbUser = await this.userRepo.save(dbUser);
+                    //reject("Wallet Data Corrupted. Use the recover button to recover your wallet");
                 }
 
                 if (!compareSync(lro.password, dbUser.password)) {
@@ -218,11 +238,7 @@ export class UserService {
                 }
 
                 const ams: AddressMapping[] = [];
-
                 dbUser.addressMappings = await this.blockchainService.getFees(dbUser);
-                const ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === 'ETH';
-                }).chainAddress;
 
                 dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
                 resolve(dbUser);
