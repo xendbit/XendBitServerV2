@@ -38,6 +38,8 @@ export class User {
     xendNetworkAddress?: string;
     @Column()
     hash?: string;
+    @Column()
+    bvn: string;
     @Column({name: "referral_code"})
     referralCode?: string;
     @Column()

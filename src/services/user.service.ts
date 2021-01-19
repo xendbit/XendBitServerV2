@@ -244,7 +244,7 @@ export class UserService {
                 const passwordHashed = hashSync(uro.password, salt);
                 const passphraseHash = Buffer.from(SHA256(uro.passphrase).toString()).toString('base64');
 
-                let dbUser = await this.findByColumn("EMAIL", uro.emailAddress);
+                let dbUser: User = await this.findByColumn("EMAIL", uro.emailAddress);
                 if (dbUser !== undefined) {
                     // user already exists
                     reject("User with email address already exists");
@@ -278,9 +278,9 @@ export class UserService {
                 dbUser.passphrase = passphraseHash;
                 dbUser.password = passwordHashed;
 
-                const bvn = dbUser.bankAccountNumber + dbUser.email.length;
+                const bvn = dbUser.bvn;
                 // TODO : Use the real thing in production
-                const ngncAccountNumber = "9972122390";//await this.providusService.createBankAccount(bvn, uro.firstName, uro.surName, uro.middleName, dbUser.email);
+                const ngncAccountNumber = await this.providusService.createBankAccount(bvn, uro.firstName, uro.surName, uro.middleName, dbUser.email);
                 dbUser.ngncAccountNumber = ngncAccountNumber;
                 dbUser.ngncBank = 'Providus Bank';
 
@@ -308,6 +308,7 @@ export class UserService {
     toUser(uro: UserRequestObject): User {
         const dr = Math.round(uro.dateRegistered / 1000);
         const u: User = {
+            bvn: uro.bvn,
             accountType: uro.accountType,
             bankAccountNumber: uro.accountNumber,
             bankCode: uro.bankCode,

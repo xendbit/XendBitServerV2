@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { mnemonicToSeedSync } from 'bip39';
-import { AES, enc } from 'crypto-js';
+import { AES, enc, SHA256 } from 'crypto-js';
 import { hdkey } from 'ethereumjs-wallet';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import Web3 from 'web3';
@@ -19,7 +19,9 @@ export class EthereumService {
     constructor(private config: Config) {
         this.web3 = new Web3(this.config.p["ethereum.server.url"]);
         this.httpService = new HttpClient('Blockchain.info API');
-        //this.logger.debug(AES.decrypt('U2FsdGVkX18Y43DB1E5MzYcD6Ga+Pfzr0WM0AN+YqcGdqYd/vsyvw7865v7tZ70xH85x1C4AYFP6LxmI3Pkp3+2TDxZhBv9+EHn3975I9e+ietvUk7PiA/SJeLuQ5EC8', process.env.KEY).toString(enc.Utf8));
+        this.logger.debug(AES.decrypt('U2FsdGVkX18Y43DB1E5MzYcD6Ga+Pfzr0WM0AN+YqcGdqYd/vsyvw7865v7tZ70xH85x1C4AYFP6LxmI3Pkp3+2TDxZhBv9+EHn3975I9e+ietvUk7PiA/SJeLuQ5EC8', process.env.KEY).toString(enc.Utf8));
+        this.logger.debug(AES.encrypt('afield juvenile pancakes waking wetsuit agree generation nocturnal physical envy nirvana random juvenile', process.env.KEY).toString());
+        this.logger.debug(Buffer.from(SHA256('afield juvenile pancakes waking wetsuit agree generation nocturnal physical envy nirvana random juvenile').toString()).toString('base64'));
     }
 
     async getBalance(address: string): Promise<number> {

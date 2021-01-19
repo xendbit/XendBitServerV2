@@ -1,5 +1,6 @@
 export class UserRequestObject {
     accountNumber: string;
+    bvn: string;
     accountType: string;
     bankCode: string;
     bankName: string;

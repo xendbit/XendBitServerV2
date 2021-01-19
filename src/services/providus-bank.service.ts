@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { parse } from 'path';
 import { Config } from 'src/services/config.service';
 import { HttpClient } from 'typed-rest-client/HttpClient';
 import { IHeaders } from 'typed-rest-client/Interfaces';
@@ -16,13 +15,8 @@ export class ProvidusBankService {
 
     async createBankAccount(bvn: string, firstName: string, lastName: string, middleName: string, email: string): Promise<string> {
         try {
-            const url = this.config.p["xendcredit.api.url"] + "/providus/new-account";
-            const username = process.env.XEND_CREDIT_API_USERNAME;
-            const password = process.env.XEND_CREDIT_API_PASSWORD;
-
-            const auth = username + ":" + password;
-            const encodedAuth = Buffer.from(auth).toString('base64');
-            const authHeader = "Basic " + encodedAuth;
+            const url = this.config.p["providus.api.url"] + "/providus/new-account";
+            const authHeader = "Api-Key " + process.env.PROVIDUS_KEY;
 
             const headers: IHeaders = {
                 "content-type": "application/json",
@@ -31,11 +25,10 @@ export class ProvidusBankService {
             };
 
             const fields = {
-                "firstName": firstName,
-                "lastName": lastName,
-                "middleName": middleName,
+                "first_name": firstName,
+                "last_name": lastName,
+                "middle_name": middleName,
                 "bvn": bvn,
-                "isAgent": false,
                 "email": email
             };
 
@@ -46,14 +39,15 @@ export class ProvidusBankService {
             const res = await this.httpService.post(url, postData, headers);
             if (res.message.statusCode === 200) {
                 const body = await res.readBody();
-                const parsed = JSON.parse(body);
+                const parsed = JSON.parse(body)[0];
+                this.logger.debug(parsed);
                 if (parsed.detail !== undefined) {
                     throw Error("Can not get NGNC Account Number: " + parsed.detail);
                 } else {
-                    if (parsed.isSuccessful === true) {
-                        return parsed.message.AccountNumber;
+                    if (parsed.IsSuccessful !== undefined || parsed.IsSuccessful === true || parsed.IsSuccessful === "true") {
+                        return parsed.Message.AccountNumber;
                     } else {
-                        throw Error("Can not get NGNC Account Number: " + body);
+                        throw Error("Can not get NGNC Account Number: " + JSON.stringify(parsed));
                     }
                 }
             } else {

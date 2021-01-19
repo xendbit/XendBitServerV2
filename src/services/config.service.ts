@@ -5,7 +5,7 @@ export class Config {
     p = {
         "flutterwave.base.url": "https://live.moneywaveapi.co/v1",
         "bitcoin.testnet": false,
-        "xendcredit.api.url": "https://xendcredit-prod.herokuapp.com",
+        "providus.api.url": "https://providus-services.herokuapp.com",
         "xendchain.server.url": "https://lb.xendbit.net/geth",
         "ethereum.server.url": "https://mainnet.infura.io/v3/3fa594a20e104a479791fc67c5f4afef",
         //"ethereum.server.url": "https://ropsten.infura.io/v3/3fa594a20e104a479791fc67c5f4afef",
