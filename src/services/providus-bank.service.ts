@@ -42,17 +42,17 @@ export class ProvidusBankService {
                 const parsed = JSON.parse(body)[0];
                 this.logger.debug(parsed);
                 if (parsed.detail !== undefined) {
-                    throw Error("Can not get NGNC Account Number: " + parsed.detail);
+                    throw Error(parsed.detail);
                 } else {
                     if (parsed.IsSuccessful !== undefined || parsed.IsSuccessful === true || parsed.IsSuccessful === "true") {
                         return parsed.Message.AccountNumber;
                     } else {
-                        throw Error("Can not get NGNC Account Number: " + JSON.stringify(parsed));
+                        throw Error(JSON.stringify(parsed.responseMessage));
                     }
                 }
             } else {
                 const body = await res.readBody();
-                throw Error("Can not get NGNC Account Number: " + body);
+                throw Error(body);
             }
         } catch (error) {
             throw error;

@@ -33,7 +33,7 @@ export class UserController {
     @Post('recover')
     @Roles('api')
     async recover(@Body() lro: LoginRequestObject): Promise<Response> {
-        const result = await this.userService.login(lro).catch(error => {
+        const result = await this.userService.recover(lro).catch(error => {
             throw error;
         });
 
