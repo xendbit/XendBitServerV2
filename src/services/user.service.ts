@@ -210,23 +210,23 @@ export class UserService {
                     }).chainAddress;
                 } catch (error) {
                     // if we got here...the user don't have data in AddressMappings. create one.
-                    const bitcoinAM = this.btcUtils.getBitcoinAddress(lro.passphrase);
-                    bitcoinAM.mnemonicCode = passphraseHash;
-                    const ethereumAM = this.ethUtils.getEthereumAddress(lro.passphrase);
-                    ethereumAM.mnemonicCode = passphraseHash; 
-                    bitcoinAM.user = dbUser;
-                    ethereumAM.user = dbUser;    
-                    await this.amRepo.save(bitcoinAM);
-                    await this.amRepo.save(ethereumAM);    
-                    dbUser.addressMappings = [];
-                    dbUser.addressMappings.push(bitcoinAM);
-                    dbUser.addressMappings.push(ethereumAM);    
+                    // const bitcoinAM = this.btcUtils.getBitcoinAddress(lro.passphrase);
+                    // bitcoinAM.mnemonicCode = passphraseHash;
+                    // const ethereumAM = this.ethUtils.getEthereumAddress(lro.passphrase);
+                    // ethereumAM.mnemonicCode = passphraseHash; 
+                    // bitcoinAM.user = dbUser;
+                    // ethereumAM.user = dbUser;    
+                    // await this.amRepo.save(bitcoinAM);
+                    // await this.amRepo.save(ethereumAM);    
+                    // dbUser.addressMappings = [];
+                    // dbUser.addressMappings.push(bitcoinAM);
+                    // dbUser.addressMappings.push(ethereumAM);    
                 }
 
                 if (dbUser.hash !== passphraseHash) {
-                    dbUser.hash = passphraseHash;
-                    dbUser = await this.userRepo.save(dbUser);
-                    //reject("Wallet Data Corrupted. Use the recover button to recover your wallet");
+                    // dbUser.hash = passphraseHash;
+                    // dbUser = await this.userRepo.save(dbUser);
+                    reject("Wallet Data Corrupted. Use the recover button to recover your wallet");
                 }
 
                 if (!compareSync(lro.password, dbUser.password)) {
