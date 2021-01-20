@@ -156,7 +156,7 @@ export class UserService {
     recover(lro: LoginRequestObject): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
-                lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });
+                //lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });
                 const passphraseHash = Buffer.from(SHA256(lro.passphrase).toString()).toString('base64');
 
                 let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
@@ -199,7 +199,7 @@ export class UserService {
         return new Promise(async (resolve, reject) => {
             try {
                 this.logger.debug(this.grouplistsService.get13thWord({ passphrase: lro.passphrase }));
-                lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });
+                //lro.passphrase = lro.passphrase + ' ' + this.grouplistsService.get13thWord({ passphrase: lro.passphrase });
                 const passphraseHash = Buffer.from(SHA256(lro.passphrase).toString()).toString('base64');
                 let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
 
