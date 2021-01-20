@@ -18,10 +18,6 @@ export class MoneyWaveService {
 
     async authenticate(): Promise<string> {
         try {
-            if (this.authToken !== null && this.authToken != undefined) {
-                return this.authToken;
-            }
-
             const url = this.config.p["flutterwave.base.url"] + "/merchant/verify";
 
             const fields = {
@@ -44,11 +40,11 @@ export class MoneyWaveService {
                     this.authToken = parsed.token;
                     return this.authToken;
                 } else {
-                    throw Error("Can not validate user bank account number - " + parsed.status + " - " + body);
+                    throw Error(parsed.status + " - " + body);
                 }
             } else {
                 const body = await res.readBody();
-                throw Error("Can not validate user bank account number -- " + res.message.statusMessage + " -- " + body);
+                throw Error(res.message.statusMessage);
             }
         } catch (error) {
             throw error;
@@ -80,7 +76,7 @@ export class MoneyWaveService {
                 if (parsed.status === 'success') {
                     return parsed.data.account_name;
                 } else {
-                    throw Error("Can not validate user bank account number - " + parsed.status + " - " + body);
+                    throw Error(parsed.status + " - " + body);
                 }
             } else {
                 const body = await res.readBody();
@@ -88,7 +84,7 @@ export class MoneyWaveService {
                 if(parsed.status === "error" && parsed.code === "RESOLVE_ERROR") {
                     throw Error("Can not get account name for provided account number and bank");
                 }
-                throw Error("Can not validate user bank account number -- " + res.message.statusMessage + " -- " + body);
+                throw Error(res.message.statusMessage);
             }
         } catch (error) {
             throw error;

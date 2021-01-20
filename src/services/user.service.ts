@@ -215,18 +215,7 @@ export class UserService {
                         return x.chain === 'ETH';
                     }).chainAddress;
                 } catch (error) {
-                    // if we got here...the user don't have data in AddressMappings. create one.
-                    // const bitcoinAM = this.btcUtils.getBitcoinAddress(lro.passphrase);
-                    // bitcoinAM.mnemonicCode = passphraseHash;
-                    // const ethereumAM = this.ethUtils.getEthereumAddress(lro.passphrase);
-                    // ethereumAM.mnemonicCode = passphraseHash; 
-                    // bitcoinAM.user = dbUser;
-                    // ethereumAM.user = dbUser;    
-                    // await this.amRepo.save(bitcoinAM);
-                    // await this.amRepo.save(ethereumAM);    
-                    // dbUser.addressMappings = [];
-                    // dbUser.addressMappings.push(bitcoinAM);
-                    // dbUser.addressMappings.push(ethereumAM);    
+                    throw(error);
                 }
 
                 if (dbUser.hash !== passphraseHash) {
