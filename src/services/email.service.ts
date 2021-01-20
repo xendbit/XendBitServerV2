@@ -5,6 +5,7 @@ import { readFileSync } from 'fs';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { BinanceOrder } from 'src/models/binance.order.entity';
 import { User } from 'src/models/user.entity';
+import { Withdraw } from 'src/models/withdraw.entity';
 import { Config } from 'src/services/config.service';
 
 @Injectable()
@@ -21,6 +22,26 @@ export class EmailService {
 
         const subjectLine = "Congratulations: Welcome to XendBit";
         await this.sendEmail(dbUser.email, subjectLine, content, [])
+    }
+
+    async sendWithdrawalEmail(w: Withdraw) {
+        let content = readFileSync('/etc/xendbit/withdrawal.html', 'utf8');
+        const link= this.config.p['withdrawal.processed.url'] + "/" + w.id;
+        content = content.replace("#userId", w.userId + "");
+        content = content.replace("#withdrawalId", w.withdrawalId);
+        content = content.replace("#amount", w.amount + "");
+        content = content.replace("#accountName", w.bankAccountName);
+        content = content.replace("#accountNumber", w.bankAccountNumber);
+        content = content.replace("#bankName", w.bankName);
+        content = content.replace("#bankCode", w.bankCode);
+        content = content.replace("#withdrawal_processed_link", link);
+
+        this.logger.debug(content);
+        const subjectLine = "New Withdrawal Request";
+        const cc: string[] = [
+            "seguna@xendbit.com", "akintayo.segun@gmail.com", "aonibudo@gmail.com"
+        ];
+        await this.sendEmail("bolaji@xendbit.com", subjectLine, content, cc)                
     }
 
     async sendBinanceEmail(bo: BinanceOrder) {

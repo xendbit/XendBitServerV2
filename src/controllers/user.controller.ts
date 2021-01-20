@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
 import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
+import { WithdrawRequestObject } from 'src/models/request.objects/withdraw.ro';
 import { UserService } from 'src/services/user.service';
 import { Response, ResponseUtils } from 'src/utils/response.utils';
 
@@ -61,7 +62,19 @@ export class UserController {
     async ngncBalance(@Param("id") id: number): Promise<Response> {
         const balance = await this.userService.getNgncBalance(id);
         return ResponseUtils.getSuccessResponse(balance)
-    }    
+    }
+
+    @Get('confirm-withdraw/:id')
+    async confirmWithdraw(@Param('id') id: number): Promise<string> {
+        return await this.userService.confirmWithdrawal(id);
+    }
+
+    @Post('withdraw-ngnc')
+    @Roles('api')
+    async withdrawNgnc(@Body() wro: WithdrawRequestObject): Promise<Response> {        
+        return ResponseUtils.getSuccessResponse(await this.userService.withdrawNgnc(wro));
+    }
+
 
     @Post('fund-account/:accountNumber/:amount')
     @Roles('api')

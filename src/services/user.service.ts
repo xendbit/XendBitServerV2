@@ -5,7 +5,9 @@ import { AES, enc, SHA256 } from 'crypto-js';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { LoginRequestObject } from 'src/models/request.objects/login.ro';
 import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
+import { WithdrawRequestObject } from 'src/models/request.objects/withdraw.ro';
 import { User } from 'src/models/user.entity';
+import { Withdraw } from 'src/models/withdraw.entity';
 import { BitcoinService } from 'src/services/bitcoin.service';
 import { Repository } from 'typeorm';
 import { BlockchainService, History } from './blockchain.service';
@@ -16,11 +18,13 @@ import { ImageService } from './image.service';
 import { MoneyWaveService } from './money-wave.service';
 import { ProvidusBankService } from './providus-bank.service';
 import { XendChainService } from './xendchain.service';
+import { v4 as randomUUID } from 'uuid';
 
 @Injectable()
 export class UserService {
     private readonly logger = new Logger(UserService.name);
     @InjectRepository(User) private userRepo: Repository<User>;
+    @InjectRepository(Withdraw) private withrawRepo: Repository<Withdraw>;
     @InjectRepository(AddressMapping) private amRepo: Repository<AddressMapping>;
     constructor(
         private moneywaveService: MoneyWaveService,
@@ -103,6 +107,40 @@ export class UserService {
 
         return "Can not find confirmation link.";
     }
+    
+    async confirmWithdrawal(id: number): Promise<string> {
+        const withdraw: Withdraw = await this.withrawRepo.findOne(id);
+        withdraw.processed = true;
+        this.withrawRepo.save(withdraw);       
+                
+        return "Withdrawal Processed Successfully";
+    }
+
+    async withdrawNgnc(wro: WithdrawRequestObject) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const dbUser: User = await this.loginNoHash(wro.emailAddress, wro.password);
+                let withdraw: Withdraw = {
+                    userId: dbUser.id,
+                    withdrawalId: randomUUID(),
+                    amount: wro.btcValue,
+                    bankAccountName: dbUser.bankAccountName,
+                    bankAccountNumber: dbUser.bankAccountNumber,
+                    bankCode: dbUser.bankCode,
+                    bankName: dbUser.bankName,
+                    processed: false,
+                    processedDate: new Date().getTime(),                           
+                }
+
+                withdraw = await this.withrawRepo.save(withdraw);
+
+                await this.emailService.sendWithdrawalEmail(withdraw);
+                resolve('Withdrawal Successful');
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 
     async fundAccount(accountNumber: string, amount: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
@@ -132,7 +170,7 @@ export class UserService {
                 let dbUser = await this.findByColumn("EMAIL", emailAddress);
 
                 if (dbUser === undefined) {
-                    reject("User with email address already not found");
+                    reject("User with email address not found");
                 }
 
                 if (!compareSync(password, dbUser.password)) {
