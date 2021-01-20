@@ -74,7 +74,7 @@ export class EthereumService {
                 const transaction = new Transaction(rawTransaction);
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
-                await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
+                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))
 
                 resolve("Success");
             } catch (error) {
