@@ -14,7 +14,7 @@ export class Config {
         "bitcoin.port": 8332,
         "bitcoin.timeout": 120000,
         "ngnc.contract.address": "0x61f67f8902650f4baf783bdf85264175326589e3",
-        "email.confirmation.url": "https://xendfilb.xendbit.net/api/user/confirm-email",
+        "email.confirmation.url": "https://newserver.xendbit.net/api/user/confirm-email",
         "xend.address": "0xC04915f6b3ff85b50A863eB1FcBF368171539413",
         "btc.history.api.url": "https://api.blockcypher.com/v1/btc/main/addrs/",
         "eth.history.api.url": "https://api.blockcypher.com/v1/eth/main/addrs/",
