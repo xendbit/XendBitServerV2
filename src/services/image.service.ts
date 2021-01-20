@@ -11,7 +11,6 @@ export class ImageService {
 
     async uploadCustomerIdImage(idImage: string): Promise<string> {
         this.logger.debug('Uploading Customer Image to cloudinary');
-        this.logger.debug(idImage);
         const response: UploadApiResponse = await v2.uploader.upload(idImage);
         return response.secure_url;
     }
