@@ -20,6 +20,12 @@ export class UserController {
         return ResponseUtils.getSuccessResponse(result, "User Created Sucessfully");
     }
 
+    @Post('send-confirmation-email')
+    @Roles('api')
+    async sendConfirmationEmail(@Body() lro: LoginRequestObject): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.userService.sendConfirmationEmail(lro), "Login Successful");
+    }
+
     @Post('login')
     @Roles('api')
     async login(@Body() lro: LoginRequestObject): Promise<Response> {

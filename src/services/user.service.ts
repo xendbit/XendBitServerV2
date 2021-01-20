@@ -243,6 +243,12 @@ export class UserService {
         });
     }
 
+    async sendConfirmationEmail(lro: LoginRequestObject): Promise<string> {
+        let dbUser = await this.findByColumn("EMAIL", lro.emailAddress);
+        await this.emailService.sendConfirmationEmail(dbUser).then(() => { });
+        return "Success";
+    }
+
     addNewUser(uro: UserRequestObject): Promise<User> {
         return new Promise(async (resolve, reject) => {
             try {
