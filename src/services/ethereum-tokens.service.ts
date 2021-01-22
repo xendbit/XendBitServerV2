@@ -150,7 +150,7 @@ export class EthereumTokensService {
                 const decimals: number = +sender.fees.decimals;
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
                 const balance = await contract.methods.balanceOf(sender.chainAddress).call({ from: sender.chainAddress });
-                resolve(balance / (10 ** decimals));
+                resolve(balance / (10 ** decimals)) ;
             } catch (error) {
                 reject(error);
             }
