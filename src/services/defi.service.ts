@@ -185,7 +185,7 @@ export class DefiService {
                     return value.address;
                 });
 
-                const thirtyMinutes = Math.round((new Date().getTime() + (30 * 60 * 1000)) / 1000);                
+                const thirtyMinutes = Math.round((new Date().getTime() + (30 * 60 * 1000)) / 1000);
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.DEFI_GAS_LIMIT),
@@ -239,7 +239,7 @@ export class DefiService {
                 });
 
                 const thirtyMinutes = Math.round((new Date().getTime() + (30 * 60 * 1000)) / 1000);
-                
+
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.DEFI_GAS_LIMIT),
@@ -304,7 +304,7 @@ export class DefiService {
                 });
 
                 const thirtyMinutes = Math.round((new Date().getTime() + (30 * 60 * 1000)) / 1000);
-                
+
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.DEFI_GAS_LIMIT),
@@ -358,30 +358,8 @@ export class DefiService {
                         resolve([]);
                     }
                 } else {
-                    if (this.chainId === ChainId.ROPSTEN) {
-                        const dbTokens: UniswapToken[] = [
-                            {
-                                address: "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-                                chainId: this.chainId,
-                                decimals: 18,
-                                logoURI: "",
-                                name: "Uniswap",
-                                symbol: "UNI"
-                            },
-                            {
-                                address: "0xf80a32a835f79d7787e8a8ee5721d0feafd78108",
-                                chainId: this.chainId,
-                                decimals: 18,
-                                logoURI: "",
-                                name: "DAI",
-                                symbol: "DAI"
-                            }
-                        ]
-                        resolve(dbTokens);
-                    } else {
-                        const dbTokens = await this.uniswapTokenRepo.find();
-                        resolve(dbTokens);
-                    }
+                    const dbTokens = await this.uniswapTokenRepo.find();
+                    resolve(dbTokens);
                 }
             } catch (error) {
                 reject(error);

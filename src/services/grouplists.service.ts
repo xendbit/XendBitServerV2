@@ -41,7 +41,6 @@ export class GrouplistsService {
     }
 
     get13thWord(gro: GenericRequestObject): string {
-        this.logger.debug(gro);
         const splitted = gro.passphrase.split(" ");
         let trimmed = "";
         splitted.forEach(x => {
