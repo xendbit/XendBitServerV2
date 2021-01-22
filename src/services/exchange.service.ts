@@ -34,7 +34,8 @@ export class ExchangeService {
     async usdRate(wallet: string, side: string): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
-                const ngnRate: number = await this.binanceService.getPrice(wallet, 'NGN');
+
+                let ngnRate: number = await this.binanceService.getPrice('USDT', 'NGN');
                 if (wallet.toUpperCase() === 'USDT') {
                     resolve({
                         'ngnRate': ngnRate,
@@ -55,6 +56,8 @@ export class ExchangeService {
                 }
 
                 usdRate = usdRate + (usdRate * markupRate);
+                ngnRate = usdRate * ngnRate;
+                
                 resolve({
                     'ngnRate': ngnRate,
                     'usdRate': usdRate
