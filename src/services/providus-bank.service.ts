@@ -10,7 +10,7 @@ export class ProvidusBankService {
     httpService: HttpClient;
 
     constructor(private config: Config) {
-        this.httpService = new HttpClient('MoneyWave API');
+        this.httpService = new HttpClient('Providus API');
     }
 
     async createBankAccount(bvn: string, firstName: string, lastName: string, middleName: string, email: string): Promise<string> {
@@ -25,11 +25,13 @@ export class ProvidusBankService {
             };
 
             const fields = {
-                "first_name": firstName,
-                "last_name": lastName,
-                "middle_name": middleName,
+                "firstName": firstName,
+                "lastName": lastName,
+                "middleName": middleName,
                 "bvn": bvn,
-                "email": email
+                "email": email,
+                "fundingUrl": this.config.p['ngnc.funding.url'],
+                "apiKey": process.env.ENCRYPTED,
             };
 
             const postData = JSON.stringify(fields);
@@ -37,22 +39,17 @@ export class ProvidusBankService {
             this.logger.debug("URL: " + url);
 
             const res = await this.httpService.post(url, postData, headers);
-            if (res.message.statusCode === 200) {
+            if (res.message.statusCode === 201) {
                 const body = await res.readBody();
-                const parsed = JSON.parse(body)[0];
-                this.logger.debug(parsed);
-                if (parsed.detail !== undefined) {
-                    throw Error(parsed.detail);
+                const parsed = JSON.parse(body);
+                if (parsed.accountNumber !== undefined) {
+                    return parsed.accountNumber;
                 } else {
-                    if (parsed.IsSuccessful !== undefined || parsed.IsSuccessful === true || parsed.IsSuccessful === "true") {
-                        return parsed.Message.AccountNumber;
-                    } else {
-                        throw Error(JSON.stringify(parsed.responseMessage));
-                    }
+                    throw Error(JSON.stringify(parsed));
                 }
             } else {
                 const body = await res.readBody();
-                throw Error(body);
+                throw Error(JSON.parse(body).error);
             }
         } catch (error) {
             throw error;

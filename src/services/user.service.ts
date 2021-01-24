@@ -291,7 +291,7 @@ export class UserService {
     }
 
     addNewUser(uro: UserRequestObject): Promise<User> {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve, reject) => {            
             try {
                 const salt = genSaltSync(12, 'a');
                 const passwordHashed = hashSync(uro.password, salt);

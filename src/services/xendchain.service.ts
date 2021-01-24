@@ -86,10 +86,12 @@ export class XendChainService {
 
                 const transaction = new Transaction(rawTransaction, {common: this.chain});
                 transaction.sign(xendPK);
-                await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));        
-                this.logger.debug(`Account funding succcessul`);
-                // Give the user some xDAI if they don't already have it.
-                this._giveGas(address, block.gasLimit);
+                this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex')).then(x => {
+                    this.logger.debug(`Account funding succcessul`);
+                    // Give the user some xDAI if they don't already have it.
+                    this._giveGas(address, block.gasLimit);
+                });
+
                 resolve("Success");
             } catch (error) {
                 reject(error);
@@ -119,7 +121,9 @@ export class XendChainService {
          
             const transaction = new Transaction(rawTransaction, {common: this.chain});       
             transaction.sign(xendPK);
-            this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));   
+            this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex')).then(x => {
+                this.logger.debug(`Gas funding for ${address} successful`);
+            }); 
         } 
     }
 

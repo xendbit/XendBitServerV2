@@ -5,7 +5,8 @@ export class Config {
     p = {
         "flutterwave.base.url": "https://live.moneywaveapi.co/v1",
         "bitcoin.testnet": false,
-        "providus.api.url": "https://providus-services.herokuapp.com",
+        "providus.api.url": "https://newserver.xendbit.net/providus",
+        //"providus.api.url": "http://localhost:8082/providus",
         "xendchain.server.url": "https://xdai.poanetwork.dev",
         "ethereum.server.url": "https://mainnet.infura.io/v3/3fa594a20e104a479791fc67c5f4afef",
         //"ethereum.server.url": "https://ropsten.infura.io/v3/3fa594a20e104a479791fc67c5f4afef",
@@ -23,6 +24,7 @@ export class Config {
         "uniswap.router.contract": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
         "uniswap.tokens.list.url": "https://tokens.coingecko.com/uniswap/all.json",
         "xend.markup": 0.5,
+        "ngnc.funding.url": "https://newserver.xendbit.net/api/user/fund-account",
         "BTC": {
             "min.xend.fees": 5.0,
             "min.block.fees": 0.00005,
