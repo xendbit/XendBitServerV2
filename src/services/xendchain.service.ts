@@ -15,12 +15,13 @@ export class XendChainService {
     erc20Abi;
     chain: Common;
 
-    constructor(private config: Config) {        
+    constructor(private config: Config) {      
+        this.init();  
     }
 
     init() {
-        this.web3 = new Web3(this.config.p["xendchain.server.url"]);
-        this.erc20Abi = this.config.erc20Abi;
+        this.web3 = new Web3(new Web3.providers.HttpProvider(this.config.p["xendchain.server.url"]));
+        this.erc20Abi = this.config.ngncAbi;
         this.ngncContractAddress = this.config.p["ngnc.contract.address"];
         this.ngncContract = new this.web3.eth.Contract(this.erc20Abi, this.ngncContractAddress);
         this.chain = Common.forCustomChain(
@@ -35,8 +36,7 @@ export class XendChainService {
     }
 
     getNgncBalance(address: string): Promise<number> {
-        this.logger.debug(`Getting balance for ${address}`);
-        this.init();
+        this.logger.debug(`Getting balance for ${address}`);        
         return new Promise(async (resolve, reject) => {
             try {
                 const balance = await this.ngncContract.methods.balanceOf(address).call({ from: address });
@@ -49,7 +49,6 @@ export class XendChainService {
     }
 
     checkNgncBalance(address: string, compareBalance: number): Promise<boolean> {
-        this.init();
         return new Promise(async (resolve, reject) => {
             try {
                 const balance = await this.getNgncBalance(address);
@@ -65,11 +64,8 @@ export class XendChainService {
     }
 
     fundNgnc(address: string, amount: number): Promise<string> {
-        this.init();
         return new Promise(async (resolve, reject) => {
             try {
-                const oldAmount: number = await this.getNgncBalance(address);
-                amount += oldAmount;
                 amount = Math.round(amount * (10**2));
                 const xendPK = Buffer.from(AES.decrypt(process.env.XEND_CREDIT_WIF, process.env.KEY).toString(enc.Utf8), 'hex');
                 const xendAddress = this.config.p["xend.address"];
@@ -78,8 +74,9 @@ export class XendChainService {
                 const contract = new this.web3.eth.Contract(this.erc20Abi, this.ngncContractAddress, { from: xendAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
+                this.logger.debug(block);
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(1),
+                    gasPrice: this.web3.utils.toHex(1000000000),
                     gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: this.ngncContractAddress,
                     value: "0x0",
@@ -87,10 +84,11 @@ export class XendChainService {
                     nonce: this.web3.utils.toHex(nonce),                                    
                 }
 
+                this.logger.debug(rawTransaction);
                 const transaction = new Transaction(rawTransaction, {common: this.chain});
                 transaction.sign(xendPK);
                 await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));        
-                
+                this.logger.debug(`Account funding succcessul`);
                 // Give the user some xDAI if they don't already have it.
                 this.giveGas(address);
                 resolve("Success");
@@ -101,7 +99,6 @@ export class XendChainService {
     }
 
     async giveGas(address: string) {
-        this.init();
         this.logger.debug("checking if user require gas");
         const availableGas = +this.web3.utils.fromWei(await this.web3.eth.getBalance(address), 'ether').toString();
         this.logger.debug(`availableGas: ${availableGas}`);
@@ -114,7 +111,7 @@ export class XendChainService {
             const nonce: number = await this.web3.eth.getTransactionCount(xendAddress);
 
             var rawTransaction: TxData = {
-                gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
+                gasPrice: this.web3.utils.toHex(1000000000),
                 gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                 to: address,
                 value: this.web3.utils.toWei(0.01, "ether"),
@@ -123,12 +120,11 @@ export class XendChainService {
             
             const transaction = new Transaction(rawTransaction);            
             transaction.sign(xendPK);
-            await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));   
+            this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));   
         } 
     }
 
     sendNgnc(sender: AddressMapping, recipient: string, amount: number): Promise<string> {
-        this.init();
         return new Promise(async (resolve, reject) => {
             try {
                 amount = Math.round(amount * (10**2));
@@ -138,7 +134,7 @@ export class XendChainService {
 
                 const block = await this.web3.eth.getBlock("latest");
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(1),
+                    gasPrice: this.web3.utils.toHex(1000000000),
                     gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: this.ngncContractAddress,
                     value: "0x0",

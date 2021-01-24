@@ -19,9 +19,6 @@ export class EthereumTokensService {
         this.web3 = new Web3(this.config.p["ethereum.server.url"]);
         this.erc20Abi = this.config.erc20Abi;
         this.httpService = new HttpClient('Blockchain.info API');
-        this.web3.eth.getGasPrice().then(gp => {
-            this.logger.debug('Gas Price: ' + gp);
-        });
     }
 
     getTokens(ethAM: AddressMapping): AddressMapping[] {
