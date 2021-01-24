@@ -14,6 +14,11 @@ export class DefiController {
         return ResponseUtils.getSuccessResponse(await this.defiService.getAllTokens(reload === "true"));
     }
 
+    @Get('get-stakable-tokens/:id')
+    async getStakableToken(@Param("id") userId: number): Promise<Response> {
+        return ResponseUtils.getSuccessResponse(await this.defiService.getStakableTokens(userId));
+    }    
+
     @Get('get-price/:from/:to')
     async getPrice(@Param("from") from: string, @Param("to") to: string): Promise<Response> {
         return ResponseUtils.getSuccessResponse(await this.defiService.getPrice(from, to));

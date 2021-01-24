@@ -81,7 +81,7 @@ export class BlockchainService {
             try {
                 let balance = 0;
                 const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === wallet;
+                    return x.chain.toLowerCase() === wallet.toLowerCase();
                 });
 
                 switch (wallet) {
@@ -111,17 +111,15 @@ export class BlockchainService {
             try {
                 let balance = 0;
                 const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === wallet;
+                    return x.chain.toLowerCase() === wallet.toLowerCase();
                 });
-                //const escrow = await this.getEscrow(wallet, user.id);
+                
                 switch (wallet) {
                     case 'BTC':
-                        balance = await this.bitcoinService.getBalance([am.chainAddress]);
-                        //balance -= escrow;
+                        balance = await this.bitcoinService.getBalance([am.chainAddress]);                        
                         break;
                     case 'ETH':
                         balance = await this.ethereumService.getBalance(am.chainAddress);
-                        //balance -= escrow;
                         break;
                     default:
                         balance = await this.ethereumTokensService.getBalance(am);

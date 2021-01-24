@@ -35,14 +35,13 @@ export class ExchangeService {
         return new Promise(async (resolve, reject) => {
             let hasNgnPair = false;
             try {
-                await this.binanceService.getPrice('USDT', 'NGN');
+                await this.binanceService.getPrice(wallet, 'NGN');
                 hasNgnPair = true;
             } catch(error) {
                 hasNgnPair = false;
             }
 
             try {
-
                 let ngnRate: number = await this.binanceService.getPrice('USDT', 'NGN');
                 if (wallet.toUpperCase() === 'USDT') {
                     resolve({
@@ -83,7 +82,7 @@ export class ExchangeService {
             try {
                 const user: User = await this.userService.loginNoHash(sco.emailAddress, sco.password);
                 const addressMapping: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === sco.fromCoin;
+                    return x.chain.toLowerCase() === sco.fromCoin.toLowerCase();
                 });
                 if (await this.blockchainService.checkBalance(sco.fromCoin, user, sco.amountToSend)) {
                     await this.blockchainService.sendToken(addressMapping, sco.buyerToAddress, sco.amountToSend, sco.xendFees, sco.blockFees);
@@ -105,7 +104,7 @@ export class ExchangeService {
             try {
                 const user: User = await this.userService.loginNoHash(tro.emailAddress, tro.password);
                 const ethAM: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === 'ETH';
+                    return x.chain.toUpperCase() === 'ETH';
                 });
 
                 if (await this.xendService.checkNgncBalance(ethAM.chainAddress, tro.amountToSpend)) {

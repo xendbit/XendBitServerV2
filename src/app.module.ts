@@ -32,11 +32,22 @@ import { DefiController } from './controllers/defi.controller';
 import { UniswapToken } from './models/uniswap.token.entity';
 import { UserToken } from './models/user.tokens.entity';
 import { Withdraw } from './models/withdraw.entity';
+import { StakableToken } from './models/stakable.token.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
-    TypeOrmModule.forFeature([Grouplists, User, AddressMapping, Exchange, BinanceOrder, UniswapToken, UserToken, Withdraw]),
+    TypeOrmModule.forFeature([
+      Grouplists, 
+      User, 
+      AddressMapping, 
+      Exchange, 
+      BinanceOrder, 
+      UniswapToken, 
+      UserToken, 
+      Withdraw,
+      StakableToken,
+    ]),
     MailerModule.forRoot({  
       transport: 'smtps://contact@xendbit.com:jugDy4-wygmyh-fintoc@smtp.gmail.com',
       defaults: {

@@ -78,7 +78,7 @@ export class BinanceService {
 
                     // withdraw it    
                     const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                        return x.chain === bo.coin;
+                        return x.chain.toLowerCase() === bo.coin.toLowerCase();
                     });
 
                     const wr: WithrawResponse = await this.client.withdraw({
@@ -131,7 +131,7 @@ export class BinanceService {
                 const depositAddress = await this.client.depositAddress({ asset: bo.coin });
 
                 const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === 'ETH';
+                    return x.chain.toUpperCase() === 'ETH';
                 });
 
                 this.client.ws.user(async (msg) => {
@@ -186,7 +186,7 @@ export class BinanceService {
                 });
 
                 const sender: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === tro.fromCoin
+                    return x.chain.toLowerCase() === tro.fromCoin.toLowerCase()
                 });
                 await this.blockchainService.sendTrade(bo, tro, sender, depositAddress.address);
                 resolve("success");

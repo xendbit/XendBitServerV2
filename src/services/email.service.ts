@@ -46,7 +46,7 @@ export class EmailService {
 
     async sendBinanceEmail(bo: BinanceOrder) {
         const am: AddressMapping = bo.user.addressMappings.find((x: AddressMapping) => {
-            return x.chain === 'ETH';
+            return x.chain.toUpperCase() === 'ETH';
         });
 
         let content = readFileSync('/etc/xendbit/binance_order.html', 'utf8');

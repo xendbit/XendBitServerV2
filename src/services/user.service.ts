@@ -45,7 +45,7 @@ export class UserService {
                 user.addressMappings = await this.blockchainService.getFees(user);
 
                 const address = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === wallet;
+                    return x.chain.toLowerCase() === wallet.toLowerCase();
                 }).chainAddress;
 
                 resolve(this.blockchainService.history(user.id, address, wallet));
@@ -71,8 +71,11 @@ export class UserService {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
+                if(user === undefined) {
+                    reject('User not found');
+                }
                 const ethAddress = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === 'ETH';
+                    return x.chain.toUpperCase() === 'ETH';
                 }).chainAddress;
                 const ngncBalance: number = await this.xendService.getNgncBalance(ethAddress);
                 resolve(ngncBalance);
@@ -151,7 +154,7 @@ export class UserService {
                 }
 
                 const am: AddressMapping = dbUser.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === 'ETH';
+                    return x.chain.toUpperCase() === 'ETH';
                 });
 
                 amount = Math.round(amount);
@@ -222,7 +225,7 @@ export class UserService {
 
                 dbUser.addressMappings = await this.blockchainService.getFees(dbUser);
                 const ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
-                    return x.chain === 'ETH';
+                    return x.chain.toUpperCase() === 'ETH';
                 }).chainAddress;
 
                 dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
@@ -250,7 +253,7 @@ export class UserService {
                 let ethAddress: string = undefined;
                 try {
                      ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
-                        return x.chain === 'ETH';
+                        return x.chain.toUpperCase() === 'ETH';
                     }).chainAddress;
                 } catch (error) {
                     throw(error);
@@ -273,7 +276,7 @@ export class UserService {
                 const ams: AddressMapping[] = [];
                 dbUser.addressMappings = await this.blockchainService.getFees(dbUser);
 
-                dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
+                //dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
                 resolve(dbUser);
             } catch (error) {
                 reject(error);
