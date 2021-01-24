@@ -74,9 +74,9 @@ export class XendChainService {
                 const contract = new this.web3.eth.Contract(this.erc20Abi, this.ngncContractAddress, { from: xendAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
-                this.logger.debug(block);
+                this.logger.debug(`block.gasLimit: ${block.gasLimit}`);
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(1000000000),
+                    gasPrice: this.web3.utils.toHex(process.env.DAI_GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: this.ngncContractAddress,
                     value: "0x0",
@@ -84,13 +84,12 @@ export class XendChainService {
                     nonce: this.web3.utils.toHex(nonce),                                    
                 }
 
-                this.logger.debug(rawTransaction);
                 const transaction = new Transaction(rawTransaction, {common: this.chain});
                 transaction.sign(xendPK);
                 await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));        
                 this.logger.debug(`Account funding succcessul`);
                 // Give the user some xDAI if they don't already have it.
-                this.giveGas(address);
+                this._giveGas(address, block.gasLimit);
                 resolve("Success");
             } catch (error) {
                 reject(error);
@@ -98,11 +97,11 @@ export class XendChainService {
         });
     }
 
-    async giveGas(address: string) {
+    private async _giveGas(address: string, gasLimit: number) {
         this.logger.debug("checking if user require gas");
-        const availableGas = +this.web3.utils.fromWei(await this.web3.eth.getBalance(address), 'ether').toString();
+        const availableGas: number = +this.web3.utils.fromWei(await this.web3.eth.getBalance(address), 'ether').toString();
         this.logger.debug(`availableGas: ${availableGas}`);
-        if(availableGas < 0.01) {
+        if(availableGas < +process.env.DAI_LOW_GAS_LIMIT) {
             // gas depleted, give some gas
             this.logger.debug(`Gas Depleted, Giving ${address} some gas`);
             const xendPK = Buffer.from(AES.decrypt(process.env.XEND_CREDIT_WIF, process.env.KEY).toString(enc.Utf8), 'hex');
@@ -111,14 +110,14 @@ export class XendChainService {
             const nonce: number = await this.web3.eth.getTransactionCount(xendAddress);
 
             var rawTransaction: TxData = {
-                gasPrice: this.web3.utils.toHex(1000000000),
-                gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
+                gasPrice: this.web3.utils.toHex(process.env.DAI_GAS_PRICE),
+                gasLimit: this.web3.utils.toHex(gasLimit),
                 to: address,
-                value: this.web3.utils.toWei(0.01, "ether"),
+                value: this.web3.utils.toHex(this.web3.utils.toWei(process.env.DAI_LOW_GAS_LIMIT, "ether")),
                 nonce: this.web3.utils.toHex(nonce)
             }
-            
-            const transaction = new Transaction(rawTransaction);            
+         
+            const transaction = new Transaction(rawTransaction, {common: this.chain});       
             transaction.sign(xendPK);
             this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));   
         } 
@@ -134,7 +133,7 @@ export class XendChainService {
 
                 const block = await this.web3.eth.getBlock("latest");
                 var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(1000000000),
+                    gasPrice: this.web3.utils.toHex(process.env.DAI_GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(block.gasLimit),
                     to: this.ngncContractAddress,
                     value: "0x0",

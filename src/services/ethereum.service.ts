@@ -67,7 +67,7 @@ export class EthereumService {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.GAS_LIMIT),
                     to: recipient,
-                    value: this.web3.utils.toWei(amount, "ether"),
+                    value: this.web3.utils.toHex(this.web3.utils.toWei(amount, "ether")),
                     nonce: this.web3.utils.toHex(nonce)
                 }
                 
