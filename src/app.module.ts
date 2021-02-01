@@ -33,6 +33,9 @@ import { UniswapToken } from './models/uniswap.token.entity';
 import { UserToken } from './models/user.tokens.entity';
 import { Withdraw } from './models/withdraw.entity';
 import { StakableToken } from './models/stakable.token.entity';
+import { SynthetixService } from './services/synthetix.service';
+import { UniswapService } from './services/uniswap.service';
+require('dotenv').config();
 
 @Module({
   imports: [
@@ -48,12 +51,12 @@ import { StakableToken } from './models/stakable.token.entity';
       Withdraw,
       StakableToken,
     ]),
-    MailerModule.forRoot({  
-      transport: 'smtps://contact@xendbit.com:jugDy4-wygmyh-fintoc@smtp.gmail.com',
+    MailerModule.forRoot({
+      transport: process.env.EMAIL_URL,
       defaults: {
-        from: '"Contact XendBit" <contact@xendbit.com>',
+        from: process.env.EMAIL_FROM,
       },
-    }),
+    }), 
   ],
   controllers: [AppController, GrouplistsController, UserController, ExchangeController, DefiController],
   providers: [
@@ -76,7 +79,9 @@ import { StakableToken } from './models/stakable.token.entity';
     BinanceService,
     BlockchainService,
     EthereumTokensService,
-    DefiService
+    DefiService,
+    SynthetixService,
+    UniswapService
   ],
 })
 export class AppModule { }

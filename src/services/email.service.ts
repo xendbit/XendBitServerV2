@@ -11,7 +11,13 @@ import { Config } from 'src/services/config.service';
 @Injectable()
 export class EmailService {
     private readonly logger = new Logger(EmailService.name);
-    constructor(private readonly mailerService: MailerService, private config: Config) {}
+    constructor(private readonly mailerService: MailerService, private config: Config) {
+        // this.sendEmail('akintayo.segun@gmail.com','Hello World','Hello Birds',undefined).then(() => {
+        //     this.logger.debug("Sent");
+        // }, (error) => {
+        //     this.logger.debug(error);
+        // });
+    }
 
     async sendConfirmationEmail(dbUser: User) {
         let content = readFileSync('/etc/xendbit/confirmation_email.html', 'utf8');
