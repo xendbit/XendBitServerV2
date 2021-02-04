@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Binance, Order, WithrawResponse } from 'binance-api-node';
-import { TradeRequestObject } from 'src/models/request.objects/trade.ro';
 import { v4 as randomUUID } from 'uuid';
 import { User } from 'src/models/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,6 +10,7 @@ import { AddressMapping } from 'src/models/address.mapping.entity';
 import { XendChainService } from './xendchain.service';
 import { BlockchainService } from './blockchain.service';
 import { EmailService } from './email.service';
+import { TradeRequestObject } from 'src/models/request.objects';
 
 const BinanceDefault = require('binance-api-node').default
 

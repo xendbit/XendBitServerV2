@@ -5,6 +5,7 @@ import Common from 'ethereumjs-common';
 import { Config } from "./config.service";
 import { Transaction, TxData } from 'ethereumjs-tx';
 import { AddressMapping } from "src/models/address.mapping.entity";
+import { ngncAbi } from "../abis/ngnc.abi";
 
 @Injectable()
 export class XendChainService {
@@ -15,13 +16,13 @@ export class XendChainService {
     erc20Abi;
     chain: Common;
 
-    constructor(private config: Config) {      
-        this.init();  
+    constructor(private config: Config) {
+        this.init();
     }
 
     init() {
         this.web3 = new Web3(new Web3.providers.HttpProvider(this.config.p["xendchain.server.url"]));
-        this.erc20Abi = this.config.ngncAbi;
+        this.erc20Abi = ngncAbi;
         this.ngncContractAddress = this.config.p["ngnc.contract.address"];
         this.ngncContract = new this.web3.eth.Contract(this.erc20Abi, this.ngncContractAddress);
         this.chain = Common.forCustomChain(
@@ -36,7 +37,7 @@ export class XendChainService {
     }
 
     getNgncBalance(address: string): Promise<number> {
-        this.logger.debug(`Getting balance for ${address}`);        
+        this.logger.debug(`Getting balance for ${address}`);
         return new Promise(async (resolve, reject) => {
             try {
                 const balance = await this.ngncContract.methods.balanceOf(address).call({ from: address });
@@ -55,8 +56,8 @@ export class XendChainService {
                 if (compareBalance > balance) {
                     throw Error(`Insufficient xNGN balance.`);
                 }
-        
-                resolve(true);        
+
+                resolve(true);
             } catch (error) {
                 reject(error);
             }
@@ -66,7 +67,7 @@ export class XendChainService {
     fundNgnc(address: string, amount: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                amount = Math.round(amount * (10**2));
+                amount = Math.round(amount * (10 ** 2));
                 const xendPK = Buffer.from(AES.decrypt(process.env.XEND_CREDIT_WIF, process.env.KEY).toString(enc.Utf8), 'hex');
                 const xendAddress = this.config.p["xend.address"];
                 const amountHex = this.web3.utils.toHex(amount);
@@ -81,10 +82,10 @@ export class XendChainService {
                     to: this.ngncContractAddress,
                     value: "0x0",
                     data: contract.methods.transfer(address, amountHex).encodeABI(),
-                    nonce: this.web3.utils.toHex(nonce),                                    
+                    nonce: this.web3.utils.toHex(nonce),
                 }
 
-                const transaction = new Transaction(rawTransaction, {common: this.chain});
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
                 transaction.sign(xendPK);
                 this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex')).then(x => {
                     this.logger.debug(`Account funding succcessul`);
@@ -103,7 +104,7 @@ export class XendChainService {
         this.logger.debug("checking if user require gas");
         const availableGas: number = +this.web3.utils.fromWei(await this.web3.eth.getBalance(address), 'ether').toString();
         this.logger.debug(`availableGas: ${availableGas}`);
-        if(availableGas < +process.env.DAI_LOW_GAS_LIMIT) {
+        if (availableGas < +process.env.DAI_LOW_GAS_LIMIT) {
             // gas depleted, give some gas
             this.logger.debug(`Gas Depleted, Giving ${address} some gas`);
             const xendPK = Buffer.from(AES.decrypt(process.env.XEND_CREDIT_WIF, process.env.KEY).toString(enc.Utf8), 'hex');
@@ -118,19 +119,19 @@ export class XendChainService {
                 value: this.web3.utils.toHex(this.web3.utils.toWei(process.env.DAI_LOW_GAS_LIMIT, "ether")),
                 nonce: this.web3.utils.toHex(nonce)
             }
-         
-            const transaction = new Transaction(rawTransaction, {common: this.chain});       
+
+            const transaction = new Transaction(rawTransaction, { common: this.chain });
             transaction.sign(xendPK);
             this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex')).then(x => {
                 this.logger.debug(`Gas funding for ${address} successful`);
-            }); 
-        } 
+            });
+        }
     }
 
     sendNgnc(sender: AddressMapping, recipient: string, amount: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                amount = Math.round(amount * (10**2));
+                amount = Math.round(amount * (10 ** 2));
                 const amountHex = this.web3.utils.toHex(amount);
                 const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, this.ngncContractAddress, { from: sender.chainAddress });
@@ -145,7 +146,7 @@ export class XendChainService {
                     nonce: this.web3.utils.toHex(nonce),
                 }
 
-                const transaction = new Transaction(rawTransaction, {common: this.chain});
+                const transaction = new Transaction(rawTransaction, { common: this.chain });
                 const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
                 transaction.sign(pk);
                 await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'))

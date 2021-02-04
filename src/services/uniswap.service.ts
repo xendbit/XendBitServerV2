@@ -4,7 +4,6 @@ import { AddressMapping } from 'src/models/address.mapping.entity';
 import { Config } from './config.service';
 import { EthereumTokensService } from './ethereum-tokens.service';
 import Web3 from 'web3';
-import { SwapTokenRequestObject } from 'src/models/request.objects/swap.token.ro';
 import { User } from 'src/models/user.entity';
 import { UserService } from './user.service';
 import { Transaction, TxData } from 'ethereumjs-tx';
@@ -15,7 +14,8 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EthereumService } from './ethereum.service';
 import { UserToken } from 'src/models/user.tokens.entity';
-import { StakableToken } from 'src/models/stakable.token.entity';
+import { uniswapRouter02Abi } from '../abis/uniswap.abi';
+import { SwapTokenRequestObject } from 'src/models/request.objects';
 
 @Injectable()
 export class UniswapService {
@@ -24,10 +24,8 @@ export class UniswapService {
     private web3: Web3;
     private uniswapRouter02Abi;
     private uniswapRouter02Address;
-    private httpService: HttpClient;
 
     @InjectRepository(UniswapToken) private uniswapTokenRepo: Repository<UniswapToken>;
-    @InjectRepository(StakableToken) private stakableTokenRepo: Repository<StakableToken>;
     @InjectRepository(UserToken) private userTokenRepo: Repository<UserToken>;
 
     constructor(
@@ -39,9 +37,8 @@ export class UniswapService {
         this.chainId = ChainId.MAINNET;
 
         this.web3 = new Web3(this.config.p["ethereum.server.url"]);
-        this.uniswapRouter02Abi = this.config.uniswapRouter02Abi;
+        this.uniswapRouter02Abi = uniswapRouter02Abi;
         this.uniswapRouter02Address = this.config.p['uniswap.router.contract'];
-        this.httpService = new HttpClient('Defi API');
     }
 
     async getPrice(fromAddress: string, toAddress: string): Promise<string> {

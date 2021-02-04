@@ -1,8 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
-import { OrdersRequest } from 'src/models/request.objects/orders.ro';
-import { SendCoinsRequestObject } from 'src/models/request.objects/send.coins.ro';
-import { TradeRequestObject } from 'src/models/request.objects/trade.ro';
+import { OrdersRequest, SendCoinsRequestObject, TradeRequestObject } from 'src/models/request.objects';
 import { ExchangeService } from 'src/services/exchange.service';
 import { Response, ResponseUtils } from 'src/utils/response.utils';
 

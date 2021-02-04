@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Grouplists } from 'src/models/grouplists.entity';
-import { GenericRequestObject } from 'src/models/request.objects/generic.ro';
 import { Repository } from 'typeorm';
 import { HmacSHA256 } from 'crypto-js';
+import { GenericRequestObject } from 'src/models/request.objects';
 
 @Injectable()
 export class GrouplistsService {

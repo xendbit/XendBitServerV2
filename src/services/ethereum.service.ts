@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { mnemonicToSeedSync } from 'bip39';
-import { AES, enc, SHA256 } from 'crypto-js';
+import { AES, enc } from 'crypto-js';
 import { hdkey } from 'ethereumjs-wallet';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import Web3 from 'web3';

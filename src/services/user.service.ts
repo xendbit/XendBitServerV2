@@ -3,9 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { AES, enc, SHA256 } from 'crypto-js';
 import { AddressMapping } from 'src/models/address.mapping.entity';
-import { LoginRequestObject } from 'src/models/request.objects/login.ro';
-import { UserRequestObject } from 'src/models/request.objects/new.user.ro';
-import { WithdrawRequestObject } from 'src/models/request.objects/withdraw.ro';
 import { User } from 'src/models/user.entity';
 import { Withdraw } from 'src/models/withdraw.entity';
 import { BitcoinService } from 'src/services/bitcoin.service';
@@ -19,6 +16,7 @@ import { MoneyWaveService } from './money-wave.service';
 import { ProvidusBankService } from './providus-bank.service';
 import { XendChainService } from './xendchain.service';
 import { v4 as randomUUID } from 'uuid';
+import { LoginRequestObject, UserRequestObject, WithdrawRequestObject } from 'src/models/request.objects';
 
 @Injectable()
 export class UserService {

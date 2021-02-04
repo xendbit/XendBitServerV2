@@ -3,7 +3,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { AddressMapping } from "src/models/address.mapping.entity";
 import { BinanceOrder } from "src/models/binance.order.entity";
 import { Exchange } from "src/models/exchange.entity";
-import { TradeRequestObject } from "src/models/request.objects/trade.ro";
+import { TradeRequestObject } from "src/models/request.objects";
+
 import { User } from "src/models/user.entity";
 import { UserToken } from "src/models/user.tokens.entity";
 import { STATUS } from "src/utils/enums";

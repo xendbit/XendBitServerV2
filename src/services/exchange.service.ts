@@ -2,8 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { v4 as randomUUID } from 'uuid';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { Exchange } from 'src/models/exchange.entity';
-import { SendCoinsRequestObject } from 'src/models/request.objects/send.coins.ro';
-import { TradeRequestObject } from 'src/models/request.objects/trade.ro';
 import { User } from 'src/models/user.entity';
 import { BinanceService } from './binance.service';
 import { BitcoinService } from './bitcoin.service';
@@ -14,7 +12,7 @@ import { XendChainService } from './xendchain.service';
 import { STATUS } from 'src/utils/enums';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OrdersRequest } from 'src/models/request.objects/orders.ro';
+import { OrdersRequest, SendCoinsRequestObject, TradeRequestObject } from 'src/models/request.objects';
 
 @Injectable()
 export class ExchangeService {

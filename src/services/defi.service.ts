@@ -3,12 +3,7 @@ import { ChainId, Token, Fetcher, WETH, Route, Trade, TokenAmount, TradeType, Pa
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { Config } from './config.service';
 import { EthereumTokensService } from './ethereum-tokens.service';
-import Web3 from 'web3';
-import { SwapTokenRequestObject } from 'src/models/request.objects/swap.token.ro';
-import { User } from 'src/models/user.entity';
 import { UserService } from './user.service';
-import { Transaction, TxData } from 'ethereumjs-tx';
-import { AES, enc } from 'crypto-js';
 import { HttpClient } from 'typed-rest-client/HttpClient';
 import { UniswapToken } from 'src/models/uniswap.token.entity';
 import { Repository } from 'typeorm';
@@ -27,10 +22,7 @@ export class DefiService {
     @InjectRepository(UserToken) private userTokenRepo: Repository<UserToken>;
 
     constructor(
-        private ethereumTokensService: EthereumTokensService,
-        private config: Config,
-        private userService: UserService,
-        private ethereumService: EthereumService,
+        private config: Config,        
     ) {
         this.httpService = new HttpClient('Defi API');
     }

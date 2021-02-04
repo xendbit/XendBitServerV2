@@ -6,6 +6,7 @@ import { Transaction, TxData } from 'ethereumjs-tx';
 import { AES, enc } from 'crypto-js';
 import { HttpClient } from 'typed-rest-client/HttpClient';
 import { History } from './blockchain.service';
+import { erc20Abi } from '../abis/erc20.abi';
 
 @Injectable()
 export class EthereumTokensService {
@@ -17,7 +18,7 @@ export class EthereumTokensService {
 
     constructor(private config: Config) {
         this.web3 = new Web3(this.config.p["ethereum.server.url"]);
-        this.erc20Abi = this.config.erc20Abi;
+        this.erc20Abi = erc20Abi;
         this.httpService = new HttpClient('Blockchain.info API');
     }
 

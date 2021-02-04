@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
-import { SwapTokenRequestObject } from 'src/models/request.objects/swap.token.ro';
+import { SwapTokenRequestObject } from 'src/models/request.objects';
 import { DefiService } from 'src/services/defi.service';
 import { UniswapService } from 'src/services/uniswap.service';
 import { Response, ResponseUtils } from 'src/utils/response.utils';
