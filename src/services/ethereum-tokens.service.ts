@@ -7,6 +7,7 @@ import { AES, enc } from 'crypto-js';
 import { HttpClient } from 'typed-rest-client/HttpClient';
 import { History } from './blockchain.service';
 import { erc20Abi } from '../abis/erc20.abi';
+import { NonceManager } from './nonce-manager.service';
 
 @Injectable()
 export class EthereumTokensService {
@@ -162,7 +163,7 @@ export class EthereumTokensService {
                 let amountIsh = (amount * (10 ** decimals)).toLocaleString();
                 amountIsh = amountIsh.split(',').join('');
                 const amountHex = this.web3.utils.toHex(amountIsh);
-                const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
 
                 var rawTransaction: TxData = {
@@ -192,7 +193,7 @@ export class EthereumTokensService {
                 let amountIsh = (amount * (10 ** decimals)).toLocaleString();
                 amountIsh = amountIsh.split(',').join('');
                 const amountHex = this.web3.utils.toHex(amountIsh);
-                const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
                 
                 var rawTransaction: TxData = {

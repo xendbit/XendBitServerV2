@@ -8,6 +8,7 @@ import { Config } from './config.service';
 import { Transaction, TxData } from 'ethereumjs-tx';
 import { HttpClient } from 'typed-rest-client/HttpClient';
 import { History } from './blockchain.service';
+import { NonceManager } from './nonce-manager.service';
 
 @Injectable()
 export class EthereumService {
@@ -61,7 +62,7 @@ export class EthereumService {
     async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
 
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),

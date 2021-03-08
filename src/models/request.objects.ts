@@ -1,65 +1,60 @@
 import { SIDE } from "src/utils/enums";
 
+abstract class BaseRequestObject {
+    emailAddress: string;
+    password: string;       
+}
+
 export class GenericRequestObject {
     passphrase?: string;
 }
 
-export class LoginRequestObject {
-    emailAddress: string;
-    password: string;
+export class LoginRequestObject extends BaseRequestObject {
     passphrase: string;
 }
 
-export class UserRequestObject {
-    accountNumber: string;
-    bvn: string;
-    accountType: string;
-    bankCode: string;
-    bankName: string;
+export class UserRequestObject extends BaseRequestObject {
+    passphrase: string;
+    accountNumber?: string;
+    bvn?: string;
+    accountType?: string;
+    bankCode?: string;
+    bankName?: string;
     country?: string;
     dateRegistered: number;
-    emailAddress: string;
     enableWhatsapp: boolean
-    firstName: string;
-    idImage: string;
-    idNumber: string;
-    idType: string;
-    middleName: string;
-    passphrase: string;
-    password: string;
-    phoneNumber: string;
+    firstName?: string;
+    idImage?: string;
+    idNumber?: string;
+    idType?: string;
+    middleName?: string;
+    phoneNumber?: string;
     referralCode: string;
-    surName: string;
+    surName?: string;
     walletType: string;
 }
 
-export class OrdersRequest {
-    emailAddress: string;
-    password: string;
+export class OrdersRequest extends BaseRequestObject {
     wallet: string;
     sellOrderTransactionId?: string;
     status?: string;
 }
 
-export class SendCoinsRequestObject {
+export class SendCoinsRequestObject extends BaseRequestObject {
     amountToSend: number;
     blockFees: number;
     buyerToAddress: string;
-    emailAddress: string;
-    password: string;
     xendFees: number;
     fromCoin: string;
 }
 
-export class SwapTokenRequestObject {
-    emailAddress: string;
-    password: string;
+export class SwapTokenRequestObject extends BaseRequestObject {
     fromAddress: string;
     toAddress: string;
     amountIn: number;
 }
 
-export class TradeRequestObject {
+export class TradeRequestObject extends BaseRequestObject {
     amountToSpend: number;
     xendFees: number;
     blockFees: number;
@@ -70,15 +65,15 @@ export class TradeRequestObject {
     fromCoin: string;
     toCoin: string;
     rate: number;
-    emailAddress: string
-    password: string;
     networkAddress: string
     orderType: string;
     side: SIDE;    
 }
 
-export class WithdrawRequestObject {
+export class WithdrawRequestObject extends BaseRequestObject {
     btcValue: number;
-    emailAddress: string;
-    password: string;       
+}
+
+export class StakeRequestObject extends BaseRequestObject {
+    amount?: number;
 }

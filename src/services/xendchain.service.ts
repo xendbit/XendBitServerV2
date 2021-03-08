@@ -6,6 +6,7 @@ import { Config } from "./config.service";
 import { Transaction, TxData } from 'ethereumjs-tx';
 import { AddressMapping } from "src/models/address.mapping.entity";
 import { ngncAbi } from "../abis/ngnc.abi";
+import { NonceManager } from "./nonce-manager.service";
 
 @Injectable()
 export class XendChainService {
@@ -71,7 +72,7 @@ export class XendChainService {
                 const xendPK = Buffer.from(AES.decrypt(process.env.XEND_CREDIT_WIF, process.env.KEY).toString(enc.Utf8), 'hex');
                 const xendAddress = this.config.p["xend.address"];
                 const amountHex = this.web3.utils.toHex(amount);
-                const nonce: number = await this.web3.eth.getTransactionCount(xendAddress);
+                const nonce: number = await NonceManager.getNonce(xendAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, this.ngncContractAddress, { from: xendAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
@@ -110,7 +111,7 @@ export class XendChainService {
             const xendPK = Buffer.from(AES.decrypt(process.env.XEND_CREDIT_WIF, process.env.KEY).toString(enc.Utf8), 'hex');
             const xendAddress = this.config.p["xend.address"];
 
-            const nonce: number = await this.web3.eth.getTransactionCount(xendAddress);
+            const nonce: number = await NonceManager.getNonce(xendAddress);
 
             var rawTransaction: TxData = {
                 gasPrice: this.web3.utils.toHex(process.env.DAI_GAS_PRICE),
@@ -133,7 +134,7 @@ export class XendChainService {
             try {
                 amount = Math.round(amount * (10 ** 2));
                 const amountHex = this.web3.utils.toHex(amount);
-                const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, this.ngncContractAddress, { from: sender.chainAddress });
 
                 const block = await this.web3.eth.getBlock("latest");

@@ -35,6 +35,7 @@ import { Withdraw } from './models/withdraw.entity';
 import { StakableToken } from './models/stakable.token.entity';
 import { SynthetixService } from './services/synthetix.service';
 import { UniswapService } from './services/uniswap.service';
+import { NonceManager } from './services/nonce-manager.service';
 require('dotenv').config();
 
 @Module({
@@ -81,7 +82,8 @@ require('dotenv').config();
     EthereumTokensService,
     DefiService,
     SynthetixService,
-    UniswapService
+    UniswapService,
+    NonceManager
   ],
 })
 export class AppModule { }

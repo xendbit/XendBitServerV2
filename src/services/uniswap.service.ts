@@ -16,6 +16,7 @@ import { EthereumService } from './ethereum.service';
 import { UserToken } from 'src/models/user.tokens.entity';
 import { uniswapRouter02Abi } from '../abis/uniswap.abi';
 import { SwapTokenRequestObject } from 'src/models/request.objects';
+import { NonceManager } from './nonce-manager.service';
 
 @Injectable()
 export class UniswapService {
@@ -76,7 +77,7 @@ export class UniswapService {
         });
     }
     
-    async swap(stro: SwapTokenRequestObject) {
+    async swap(stro: SwapTokenRequestObject): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userService.loginNoHash(stro.emailAddress, stro.password);
@@ -163,7 +164,7 @@ export class UniswapService {
                 const slippageTolerance: Percent = new Percent('50', '10000') // 50 bips, or 0.50%
                 const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw.toString(); // needs to be converted to e.g. hex
 
-                const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.uniswapRouter02Abi, this.uniswapRouter02Address, { from: sender.chainAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
@@ -216,7 +217,7 @@ export class UniswapService {
                 const slippageTolerance: Percent = new Percent('50', '10000') // 50 bips, or 0.50%
                 const amountOutMin = this.web3.utils.toHex(trade.minimumAmountOut(slippageTolerance).raw.toString()) // needs to be converted to e.g. hex
 
-                const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.uniswapRouter02Abi, this.uniswapRouter02Address, { from: sender.chainAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
@@ -281,7 +282,7 @@ export class UniswapService {
                 const slippageTolerance: Percent = new Percent('50', '10000') // 50 bips, or 0.50%
                 const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw.toString() // needs to be converted to e.g. hex
 
-                const nonce: number = await this.web3.eth.getTransactionCount(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.uniswapRouter02Abi, this.uniswapRouter02Address, { from: sender.chainAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
