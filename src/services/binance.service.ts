@@ -56,7 +56,7 @@ export class BinanceService {
             try {
                 bo = await this.binanceRepo.save(bo);
 
-                const symbol = bo.coin + "NGN";
+                const symbol = bo.coin + "USDT";
                 const orderReponse: Order = await this.client.order({
                     quantity: bo.quoteOrderQty + "",
                     side: bo.side,
@@ -146,7 +146,7 @@ export class BinanceService {
                                     if (bo.status !== STATUS.SUCCESS) {
                                         bo.status = STATUS.SENT_TO_BINANCE_CONFIRMED;
                                         bo = await this.binanceRepo.save(bo);
-                                        const symbol = bo.coin + "NGN";
+                                        const symbol = bo.coin + "USDT";
                                         // post a market order on binance
                                         const orderReponse: Order = await this.client.order({
                                             quantity: bo.quantity + "",
