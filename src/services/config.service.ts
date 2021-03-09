@@ -29,7 +29,7 @@ export class Config {
         "BTC": {
             "min.xend.fees": 5.0,
             "min.block.fees": 0.00005,
-            "external.deposit.fees": 300,
+            "external.deposit.fees": 0,
             "perc.external.trading.fees": 0.001,
             "max.xend.fees": 100.0,
             "perc.xend.fees": 0.005,
@@ -39,7 +39,7 @@ export class Config {
         "ETH": {
             "min.xend.fees": 5.0,
             "min.block.fees": 0.00005,
-            "external.deposit.fees": 300,
+            "external.deposit.fees": 0,
             "perc.external.trading.fees": 0.001,
             "max.xend.fees": 100.0,
             "perc.xend.fees": 0.005,
@@ -49,7 +49,7 @@ export class Config {
         "USDT": {
             "min.xend.fees": 5.0,
             "min.block.fees": 0.005,
-            "external.deposit.fees": 0,
+            "external.deposit.fees": 3,
             "perc.external.trading.fees": 0.001,
             "max.xend.fees": 100.0,
             "perc.xend.fees": 0.00125,

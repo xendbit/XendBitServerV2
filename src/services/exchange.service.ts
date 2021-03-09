@@ -31,21 +31,12 @@ export class ExchangeService {
 
     async usdRate(wallet: string, side: string): Promise<any> {
         return new Promise(async (resolve, reject) => {
-            let hasNgnPair = false;
             try {
-                await this.binanceService.getPrice(wallet, 'NGN');
-                hasNgnPair = true;
-            } catch(error) {
-                hasNgnPair = false;
-            }
-
-            try {
-                let ngnRate: number = await this.binanceService.getPrice('USDT', 'NGN');
                 if (wallet.toUpperCase() === 'USDT') {
                     resolve({
-                        'ngnRate': ngnRate,
+                        'ngnRate': 1,
                         'usdRate': 1,
-                        'hasNgnPair': hasNgnPair,
+                        'hasNgnPair': true,
                     });
                 }
 
@@ -61,13 +52,12 @@ export class ExchangeService {
                         break;                        
                 }
 
-                usdRate = usdRate + (usdRate * markupRate);
-                ngnRate = usdRate * ngnRate;
+                usdRate = usdRate + (usdRate * markupRate);                
                 
                 resolve({
-                    'ngnRate': ngnRate,
+                    'ngnRate': 1,
                     'usdRate': usdRate,
-                    'hasNgnPair': hasNgnPair,
+                    'hasNgnPair': true,
                 });
             } catch (e) {
                 reject(e);

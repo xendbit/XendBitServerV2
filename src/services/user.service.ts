@@ -17,6 +17,7 @@ import { ProvidusBankService } from './providus-bank.service';
 import { XendChainService } from './xendchain.service';
 import { v4 as randomUUID } from 'uuid';
 import { LoginRequestObject, UserRequestObject, WithdrawRequestObject } from 'src/models/request.objects';
+import { EthereumTokensService } from './ethereum-tokens.service';
 
 @Injectable()
 export class UserService {
@@ -34,6 +35,7 @@ export class UserService {
         private imageService: ImageService,
         private blockchainService: BlockchainService,
         private grouplistsService: GrouplistsService,
+        private ethereumTokenService: EthereumTokensService,
     ) { }
 
     async history(id: number, wallet: string): Promise<History[]> {
@@ -72,10 +74,15 @@ export class UserService {
                 if(user === undefined) {
                     reject('User not found');
                 }
-                const ethAddress = user.addressMappings.find((x: AddressMapping) => {
+                const ethAM = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain.toUpperCase() === 'ETH';
-                }).chainAddress;
-                const ngncBalance: number = await this.xendService.getNgncBalance(ethAddress);
+                });
+
+                const ethAddress = ethAM.chainAddress;
+                //const ngncBalance: number = await this.xendService.getNgncBalance(ethAddress);
+
+                const usdt = await this.ethereumTokenService.getUSDT(ethAM);
+                const ngncBalance: number = await this.ethereumTokenService.getBalance(usdt);
                 resolve(ngncBalance);
             } catch (error) {
                 reject(error);
