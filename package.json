@@ -54,6 +54,7 @@
     "rimraf": "^3.0.2",
     "rpc-bitcoin": "^2.0.0",
     "rxjs": "^6.6.3",
+    "synthetix": "^2.39.4",
     "typed-rest-client": "^1.8.0",
     "typeorm": "^0.2.29",
     "uuid": "^8.3.2",

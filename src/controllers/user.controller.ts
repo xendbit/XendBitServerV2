@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
-import { LoginRequestObject, UserRequestObject, WithdrawRequestObject } from 'src/models/request.objects';
+import { LoginRequestObject, StakeRequestObject, UserRequestObject, WithdrawRequestObject } from 'src/models/request.objects';
+import { SynthetixService } from 'src/services/synthetix.service';
 import { UserService } from 'src/services/user.service';
 import { Response, ResponseUtils } from 'src/utils/response.utils';
 
@@ -45,6 +46,20 @@ export class UserController {
         return ResponseUtils.getSuccessResponse(result, "Recover Successful");
     }    
 
+    @Post('stake')
+    @Roles('api')
+    async stake(@Body() sro: StakeRequestObject): Promise<Response> {
+        const result = await this.userService.stake(sro);
+        return ResponseUtils.getSuccessResponse(result, "Stake Successful");
+    }
+    
+    @Post('unstake')
+    @Roles('api')
+    async unstake(@Body() sro: StakeRequestObject): Promise<Response> {
+        const result = await this.userService.unstake(sro);
+        return ResponseUtils.getSuccessResponse(result, "Unstake Successful");
+    }    
+
     @Get('confirm-email/:tag')
     async confirmEmail(@Param('tag') tag: string): Promise<string> {
         return await this.userService.confirmEmail(tag);
@@ -55,6 +70,12 @@ export class UserController {
         const balance = await this.userService.balance(id, wallet);
         return ResponseUtils.getSuccessResponse(balance)
     }
+
+    @Get('burnable/:id/:wallet')
+    async burnable(@Param("id") id: number, @Param("wallet") wallet: string): Promise<Response> {
+        const burnable = await this.userService.burnable(id, wallet);
+        return ResponseUtils.getSuccessResponse(burnable)
+    }    
 
     @Get('ngnc-balance/:id')
     async ngncBalance(@Param("id") id: number): Promise<Response> {

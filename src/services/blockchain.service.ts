@@ -13,6 +13,7 @@ import { BitcoinService } from "./bitcoin.service";
 import { Config } from "./config.service";
 import { EthereumTokensService } from "./ethereum-tokens.service";
 import { EthereumService } from "./ethereum.service";
+import { SynthetixService } from "./synthetix.service";
 
 @Injectable()
 export class BlockchainService {
@@ -25,6 +26,7 @@ export class BlockchainService {
         private bitcoinService: BitcoinService,
         private ethereumService: EthereumService,
         private ethereumTokensService: EthereumTokensService,
+        private snxService: SynthetixService,
         private config: Config,
     ) { }
 
@@ -107,6 +109,23 @@ export class BlockchainService {
         });
     }
 
+    async getBurnable(wallet: string, user: User): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let balance = 0;
+                const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
+                    return x.chain.toLowerCase() === wallet.toLowerCase();
+                });
+                switch(wallet) {
+                    case 'SNX':
+                        resolve(await this.snxService.debtBalance(am));
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     async getBalance(wallet: string, user: User): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -114,10 +133,10 @@ export class BlockchainService {
                 const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain.toLowerCase() === wallet.toLowerCase();
                 });
-                
+
                 switch (wallet) {
                     case 'BTC':
-                        balance = await this.bitcoinService.getBalance([am.chainAddress]);                        
+                        balance = await this.bitcoinService.getBalance([am.chainAddress]);
                         break;
                     case 'ETH':
                         balance = await this.ethereumService.getBalance(am.chainAddress);

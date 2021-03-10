@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ChainId } from '@uniswap/sdk';
 import Web3 from 'web3';
+import synthetix from 'synthetix';
 import { Config } from './config.service';
 import { synthetixAbi } from '../abis/synthetix.abis';
 import { Transaction, TxData } from 'ethereumjs-tx';
@@ -21,44 +22,56 @@ export class SynthetixService {
 
     constructor(
         private config: Config,
-        private userService: UserService,
     ) {
         this.chainId = ChainId.MAINNET;
         this.contractor = this.config.p['xend.address'];
         this.synthetixContract = this.config.p['synthetix.contract'];
         this.web3 = new Web3(this.config.p["ethereum.server.url"]);
-        //this._test();
+        // this._test();
     }
 
-    async unstake(sro: StakeRequestObject): Promise<string> {
+    async debtBalance(am: AddressMapping): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
-                const user: User = await this.userService.loginNoHash(sro.emailAddress, sro.password);
-                const sender: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain.toUpperCase() === 'ETH';
-                });
-                sender.user = user;    
-
-                const amountHex = this.web3.utils.toHex(sro.amount);
-                const nonce: number = await NonceManager.getNonce(this.contractor);
-    
                 const contract = new this.web3.eth.Contract(synthetixAbi, this.synthetixContract);
-                const debtBalance = contract.methods.debtBalanceOf(sender.chainAddress, 'sUSD');
-                var rawTransaction: TxData = {
-                    gasPrice: this.web3.utils.toHex(process.env.SYNTH_GAS_PRICE),
-                    gasLimit: this.web3.utils.toHex(process.env.SYNTH_GAS_LIMIT),
-                    to: this.synthetixContract,
-                    value: "0x0",
-                    data: contract.methods.issueSynths(amountHex).encodeABI(),
-                    nonce: this.web3.utils.toHex(nonce),
-                }
-    
-                const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
-                const transaction = new Transaction(rawTransaction);
-                transaction.sign(pk);
-                const trx = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));
+                const debtBalance = await contract.methods.debtBalanceOf(am.chainAddress, 'sUSD');
+                resolve(debtBalance);
+            } catch (error) {
+                reject(error);
+            }
+        });
 
-                resolve(trx.transactionHash);
+    }
+
+    async unstake(sender: AddressMapping): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+
+                const contract = new this.web3.eth.Contract(synthetixAbi, this.synthetixContract);
+
+                contract.methods.debtBalanceOf(sender.chainAddress, this.web3.utils.fromAscii('sUSD')).call({ from: sender.chainAddress }).then(x => {
+                    
+                });
+                
+                // const debtBalance = await contract.methods.debtBalanceOf(sender.chainAddress, 'sUSD').call({ from: sender.chainAddress });
+                // console.log(`debtBalance`);
+                resolve('Hello');
+                // // var rawTransaction: TxData = {
+                // //     gasPrice: this.web3.utils.toHex(process.env.SYNTH_GAS_PRICE),
+                // //     gasLimit: this.web3.utils.toHex(process.env.SYNTH_GAS_LIMIT),
+                // //     to: this.synthetixContract,
+                // //     value: "0x0",
+                // //     data: contract.methods.burnSynths(debtBalance).encodeABI(),
+                // //     nonce: this.web3.utils.toHex(nonce),
+                // // }
+    
+                // // const pk = Buffer.from(AES.decrypt(sender.wif, process.env.KEY).toString(enc.Utf8).replace('0x', ''), 'hex');
+                // // const transaction = new Transaction(rawTransaction);
+                // // transaction.sign(pk);
+                // // const trx = await this.web3.eth.sendSignedTransaction('0x' + transaction.serialize().toString('hex'));
+
+                // resolve(trx.transactionHash);
 
             } catch (error) {
                 reject(error);
@@ -66,17 +79,11 @@ export class SynthetixService {
         });
     }
 
-    async stake(sro: StakeRequestObject): Promise<string> {
+    async stake(amount: number, sender: AddressMapping): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                const user: User = await this.userService.loginNoHash(sro.emailAddress, sro.password);
-                const sender: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain.toUpperCase() === 'ETH';
-                });
-                sender.user = user;    
-
-                const amountHex = this.web3.utils.toHex(sro.amount);
-                const nonce: number = await NonceManager.getNonce(this.contractor);
+                const amountHex = this.web3.utils.toHex(amount);
+                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
     
                 const contract = new this.web3.eth.Contract(synthetixAbi, this.synthetixContract);
                 var rawTransaction: TxData = {

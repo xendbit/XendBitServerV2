@@ -16,8 +16,9 @@ import { MoneyWaveService } from './money-wave.service';
 import { ProvidusBankService } from './providus-bank.service';
 import { XendChainService } from './xendchain.service';
 import { v4 as randomUUID } from 'uuid';
-import { LoginRequestObject, UserRequestObject, WithdrawRequestObject } from 'src/models/request.objects';
+import { LoginRequestObject, StakeRequestObject, UserRequestObject, WithdrawRequestObject } from 'src/models/request.objects';
 import { EthereumTokensService } from './ethereum-tokens.service';
+import { SynthetixService } from './synthetix.service';
 
 @Injectable()
 export class UserService {
@@ -34,6 +35,7 @@ export class UserService {
         private emailService: EmailService,
         private imageService: ImageService,
         private blockchainService: BlockchainService,
+        private snxService: SynthetixService,
         private grouplistsService: GrouplistsService,
         private ethereumTokenService: EthereumTokensService,
     ) { }
@@ -71,7 +73,7 @@ export class UserService {
         return new Promise(async (resolve, reject) => {
             try {
                 const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
-                if(user === undefined) {
+                if (user === undefined) {
                     reject('User not found');
                 }
                 const ethAM = user.addressMappings.find((x: AddressMapping) => {
@@ -102,6 +104,48 @@ export class UserService {
         });
     }
 
+    async stake(sro: StakeRequestObject): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const user: User = await this.loginNoHash(sro.emailAddress, sro.password);
+                user.addressMappings = await this.blockchainService.getFees(user);
+                const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
+                    return x.chain.toLowerCase() === 'snx';
+                });
+                const result = await this.snxService.stake(sro.amount, am);
+            } catch (error) {
+                reject(error);
+            }
+        });        
+    }
+
+    async unstake(sro: StakeRequestObject): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const user: User = await this.loginNoHash(sro.emailAddress, sro.password);
+                user.addressMappings = await this.blockchainService.getFees(user);
+                const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
+                    return x.chain.toLowerCase() === 'snx';
+                });
+                const result = await this.snxService.unstake(am);
+            } catch (error) {
+                reject(error);
+            }
+        });        
+    }    
+
+    async burnable(id: number, wallet: string): Promise<number> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const user: User = await this.userRepo.findOne(id, { relations: ['addressMappings'] });
+                user.addressMappings = await this.blockchainService.getFees(user);
+                resolve(await this.blockchainService.getBurnable(wallet, user));
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     async confirmEmail(tag: string): Promise<string> {
         const email = AES.decrypt(Buffer.from(tag, 'base64').toString('ascii'), process.env.KEY).toString(enc.Utf8)
 
@@ -115,12 +159,12 @@ export class UserService {
 
         return "Can not find confirmation link.";
     }
-    
+
     async confirmWithdrawal(id: number): Promise<string> {
         const withdraw: Withdraw = await this.withrawRepo.findOne(id);
         withdraw.processed = true;
-        this.withrawRepo.save(withdraw);       
-                
+        this.withrawRepo.save(withdraw);
+
         return "Withdrawal Processed Successfully";
     }
 
@@ -137,7 +181,7 @@ export class UserService {
                     bankCode: dbUser.bankCode,
                     bankName: dbUser.bankName,
                     processed: false,
-                    processedDate: new Date().getTime(),                           
+                    processedDate: new Date().getTime(),
                 }
 
                 withdraw = await this.withrawRepo.save(withdraw);
@@ -254,14 +298,14 @@ export class UserService {
                 if (dbUser === undefined) {
                     reject("User with email address already not found");
                 }
-                
+
                 let ethAddress: string = undefined;
                 try {
-                     ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
+                    ethAddress = dbUser.addressMappings.find((x: AddressMapping) => {
                         return x.chain.toUpperCase() === 'ETH';
                     }).chainAddress;
                 } catch (error) {
-                    throw(error);
+                    throw (error);
                 }
 
                 if (dbUser.hash !== passphraseHash) {
@@ -296,7 +340,7 @@ export class UserService {
     }
 
     addNewUser(uro: UserRequestObject): Promise<User> {
-        return new Promise(async (resolve, reject) => {            
+        return new Promise(async (resolve, reject) => {
             try {
                 const salt = genSaltSync(12, 'a');
                 const passwordHashed = hashSync(uro.password, salt);
