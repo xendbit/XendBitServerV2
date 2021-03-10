@@ -49,7 +49,9 @@ export class BinanceService {
                 quoteOrderQty: tro.amountToGet,
                 side: tro.side,
                 status: STATUS.ORDER_PLACED,
-                timestamp: new Date().getTime(),
+                fetchCoinDate: Date.now(),
+                fetchedCoin: false,
+                timestamp: new Date().getTime(),                
                 user: user
             }
 
@@ -122,6 +124,8 @@ export class BinanceService {
                     side: tro.side,
                     status: STATUS.ORDER_PLACED,
                     timestamp: new Date().getTime(),
+                    fetchCoinDate: Date.now(),
+                    fetchedCoin: false,                    
                     user: user
                 }
 
