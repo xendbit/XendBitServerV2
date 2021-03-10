@@ -15,10 +15,12 @@ export class NonceManager {
     static async getNonce(address: string): Promise<number> {
         if(NonceManager.NONCE[address] === undefined) {
             const nonce = await this.web3.eth.getTransactionCount(address);
+            console.log(`Nonce: ${nonce}`);
             NonceManager.NONCE[address] = nonce;
             return nonce;
         } else {
             NonceManager.NONCE[address] = NonceManager.NONCE[address] + 1;
+            console.log(`NonceManager,NONCE: ${NonceManager.NONCE[address]}`);
             return NonceManager.NONCE[address];
         }        
     }
