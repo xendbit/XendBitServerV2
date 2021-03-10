@@ -164,6 +164,7 @@ export class UniswapService {
                 const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw.toString(); // needs to be converted to e.g. hex
 
                 const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                this.logger.debug(`Sender:Nonce == ${sender.chainAddress}:${nonce}`);
                 const contract = new this.web3.eth.Contract(this.uniswapRouter02Abi, this.uniswapRouter02Address, { from: sender.chainAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
@@ -217,6 +218,7 @@ export class UniswapService {
                 const amountOutMin = this.web3.utils.toHex(trade.minimumAmountOut(slippageTolerance).raw.toString()) // needs to be converted to e.g. hex
 
                 const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                this.logger.debug(`Sender:Nonce == ${sender.chainAddress}:${nonce}`);
                 const contract = new this.web3.eth.Contract(this.uniswapRouter02Abi, this.uniswapRouter02Address, { from: sender.chainAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
@@ -280,8 +282,9 @@ export class UniswapService {
                 const trade: Trade = new Trade(route, new TokenAmount(fromToken, amountInIsh), TradeType.EXACT_INPUT)
                 const slippageTolerance: Percent = new Percent('50', '10000') // 50 bips, or 0.50%
                 const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw.toString() // needs to be converted to e.g. hex
-
+                
                 const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                this.logger.debug(`Sender:Nonce == ${sender.chainAddress}:${nonce}`);
                 const contract = new this.web3.eth.Contract(this.uniswapRouter02Abi, this.uniswapRouter02Address, { from: sender.chainAddress });
 
                 const block = await this.web3.eth.getBlock("latest");
