@@ -1,14 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ChainId } from '@uniswap/sdk';
 import Web3 from 'web3';
-import synthetix from 'synthetix';
 import { Config } from './config.service';
 import { synthetixAbi } from '../abis/synthetix.abis';
 import { Transaction, TxData } from 'ethereumjs-tx';
 import { AES, enc } from 'crypto-js';
-import { StakeRequestObject } from 'src/models/request.objects';
-import { User } from 'src/models/user.entity';
-import { UserService } from './user.service';
 import { AddressMapping } from 'src/models/address.mapping.entity';
 import { NonceManager } from './nonce-manager.service';
 
