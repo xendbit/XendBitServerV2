@@ -194,27 +194,27 @@ export class UserService {
         });
     }
 
-    async fundAccount(accountNumber: string, amount: number): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let dbUser = await this.findByColumn("NGNC_ACCOUNT_NUMBER", accountNumber);
-                if (dbUser === undefined) {
-                    reject("User with account number not found");
-                }
+    // async fundAccount(accountNumber: string, amount: number): Promise<string> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let dbUser = await this.findByColumn("NGNC_ACCOUNT_NUMBER", accountNumber);
+    //             if (dbUser === undefined) {
+    //                 reject("User with account number not found");
+    //             }
 
-                const am: AddressMapping = dbUser.addressMappings.find((x: AddressMapping) => {
-                    return x.chain.toUpperCase() === 'ETH';
-                });
+    //             const am: AddressMapping = dbUser.addressMappings.find((x: AddressMapping) => {
+    //                 return x.chain.toUpperCase() === 'ETH';
+    //             });
 
-                amount = Math.round(amount);
-                this.logger.debug(`Funding ....... ${am.chainAddress} with ${amount}`);
-                await this.xendService.fundNgnc(am.chainAddress, amount);
-                resolve("success");
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
+    //             amount = Math.round(amount);
+    //             this.logger.debug(`Funding ....... ${am.chainAddress} with ${amount}`);
+    //             await this.xendService.fundNgnc(am.chainAddress, amount);
+    //             resolve("success");
+    //         } catch (error) {
+    //             reject(error);
+    //         }
+    //     });
+    // }
 
     loginNoHash(emailAddress: string, password: string): Promise<User> {
         return new Promise(async (resolve, reject) => {
@@ -277,7 +277,7 @@ export class UserService {
                     return x.chain.toUpperCase() === 'ETH';
                 }).chainAddress;
 
-                dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
+                dbUser.ngncBalance = await this.getNgncBalance(dbUser.id);
                 resolve(dbUser);
             } catch (error) {
                 reject(error);
@@ -325,7 +325,7 @@ export class UserService {
                 const ams: AddressMapping[] = [];
                 dbUser.addressMappings = await this.blockchainService.getFees(dbUser);
 
-                //dbUser.ngncBalance = await this.xendService.getNgncBalance(ethAddress);
+                dbUser.ngncBalance = await this.getNgncBalance(dbUser.id);
                 resolve(dbUser);
             } catch (error) {
                 reject(error);

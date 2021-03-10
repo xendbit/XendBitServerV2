@@ -24,7 +24,7 @@ export class BinanceService {
     private readonly logger = new Logger(BinanceService.name);
     @InjectRepository(BinanceOrder) private binanceRepo: Repository<BinanceOrder>;
 
-    constructor(        
+    constructor(
         private blockchainService: BlockchainService,
         private xendService: XendChainService,
         private emailService: EmailService,
@@ -164,9 +164,23 @@ export class BinanceService {
                                             });
 
                                             this.logger.debug(`Sending ${filled} to ${am.chainAddress}`);
-                                            await this.xendService.fundNgnc(am.chainAddress, Math.round(filled));
-                                            bo.status = STATUS.SUCCESS;
-                                            await this.binanceRepo.save(bo);
+
+                                            const wr: WithrawResponse = await this.client.withdraw({
+                                                address: am.chainAddress,
+                                                amount: filled,
+                                                asset: 'USDT',
+                                            });
+
+                                            if (wr.success) {
+                                                bo.status = STATUS.SUCCESS;
+                                            } else {
+                                                bo.status = STATUS.FAILURE;
+                                            }
+                                            bo = await this.binanceRepo.save(bo);
+
+                                            //await this.xendService.fundNgnc(am.chainAddress, Math.round(filled));
+                                            //bo.status = STATUS.SUCCESS;
+                                            //await this.binanceRepo.save(bo);
                                         } else {
                                             this.logger.debug(orderReponse.status);
                                         }

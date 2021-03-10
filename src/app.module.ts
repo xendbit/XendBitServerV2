@@ -36,6 +36,7 @@ import { StakableToken } from './models/stakable.token.entity';
 import { SynthetixService } from './services/synthetix.service';
 import { UniswapService } from './services/uniswap.service';
 import { NonceManager } from './services/nonce-manager.service';
+import { PaxfulService } from './services/paxful.service';
 require('dotenv').config();
 
 @Module({
@@ -83,7 +84,8 @@ require('dotenv').config();
     DefiService,
     SynthetixService,
     UniswapService,
-    NonceManager
+    NonceManager,
+    PaxfulService
   ],
 })
 export class AppModule { }

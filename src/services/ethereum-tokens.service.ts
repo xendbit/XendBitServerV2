@@ -83,7 +83,7 @@ export class EthereumTokensService {
             logoURI: 'https://cryptologos.cc/logos/binance-coin-bnb-logo.png',
         }
 
-        return am;        
+        return am;
     }
 
     getUSDT(ethAM: AddressMapping): AddressMapping {
@@ -149,7 +149,22 @@ export class EthereumTokensService {
                 const decimals: number = +sender.fees.decimals;
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
                 const balance = await contract.methods.balanceOf(sender.chainAddress).call({ from: sender.chainAddress });
-                resolve(balance / (10 ** decimals)) ;
+                resolve(balance / (10 ** decimals));
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    checkBalance(sender: AddressMapping, amount: number): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const balance = await this.getBalance(sender);
+                if (amount > balance) {
+                    throw Error(`Insufficient ${sender.chain} balance.`);
+                }
+
+                resolve(true);
             } catch (error) {
                 reject(error);
             }
@@ -195,7 +210,7 @@ export class EthereumTokensService {
                 const amountHex = this.web3.utils.toHex(amountIsh);
                 const nonce: number = await NonceManager.getNonce(sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
-                
+
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),
                     gasLimit: this.web3.utils.toHex(process.env.TOKENS_GAS_LIMIT),

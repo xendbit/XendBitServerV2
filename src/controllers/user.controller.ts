@@ -95,11 +95,11 @@ export class UserController {
     }
 
 
-    @Post('fund-account/:accountNumber/:amount')
-    @Roles('api')
-    async fundAccount(@Param("accountNumber") accountNumber: string, @Param("amount") amount: number): Promise<Response> {        
-        return ResponseUtils.getSuccessResponse(await this.userService.fundAccount(accountNumber, amount));
-    }
+    // @Post('fund-account/:accountNumber/:amount')
+    // @Roles('api')
+    // async fundAccount(@Param("accountNumber") accountNumber: string, @Param("amount") amount: number): Promise<Response> {        
+    //     return ResponseUtils.getSuccessResponse(await this.userService.fundAccount(accountNumber, amount));
+    // }
 
     @Get('history/:id/:wallet')
     async history(@Param('id') id: number, @Param('wallet') wallet: string): Promise<Response> {

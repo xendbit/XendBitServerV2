@@ -13,6 +13,7 @@ import { STATUS } from 'src/utils/enums';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrdersRequest, SendCoinsRequestObject, TradeRequestObject } from 'src/models/request.objects';
+import { EthereumTokensService } from './ethereum-tokens.service';
 
 @Injectable()
 export class ExchangeService {
@@ -24,7 +25,7 @@ export class ExchangeService {
         private binanceService: BinanceService,
         private userService: UserService,
         private blockchainService: BlockchainService,
-        private bitcoinService: BitcoinService,
+        private ethereumTokenService: EthereumTokensService,
         private xendService: XendChainService,
         private config: Config
     ) { }
@@ -95,10 +96,14 @@ export class ExchangeService {
                     return x.chain.toUpperCase() === 'ETH';
                 });
 
-                if (await this.xendService.checkNgncBalance(ethAM.chainAddress, tro.amountToSpend)) {
-                    // send ngnc to us
+                const usdtAM: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
+                    return x.chain.toLowerCase() === 'usdt';
+                });
+
+                if (await this.ethereumTokenService.checkBalance(usdtAM, tro.amountToSpend)) {
+                    // send usdt to us
                     const xendAddress = this.config.p["xend.address"];
-                    const trxHash = await this.xendService.sendNgnc(ethAM, xendAddress, tro.amountToSpend);
+                    const trxHash = await this.ethereumTokenService.sendToken(usdtAM, xendAddress, tro.amountToSpend);
 
                     this.logger.debug(`Send NGNC Hash: ${trxHash}`);
 

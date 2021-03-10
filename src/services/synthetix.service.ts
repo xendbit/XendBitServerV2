@@ -40,7 +40,6 @@ export class SynthetixService {
                 reject(error);
             }
         });
-
     }
 
     async unstake(sender: AddressMapping): Promise<string> {
