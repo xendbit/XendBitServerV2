@@ -29,6 +29,29 @@ export class BinanceService {
         private xendService: XendChainService,
         private emailService: EmailService,
     ) {
+        this.client.exchangeInfo().then(x => {
+            //this.logger.debug(x);
+            const bnbInfo = [];
+            for (let a of x.symbols) {
+                if (a.symbol === 'BNBUSDT') {
+                    bnbInfo.push(a);
+                }
+            }
+            this.logger.debug(bnbInfo[0].baseAssetPrecision);
+        });
+    }
+
+    async getPrecision(symbol: string): Promise<number> {
+        return new Promise(async (resolve, reject) => {
+            const ei = await this.client.exchangeInfo();
+            const symbols = ei.symbols;
+            for (let a of symbols) {
+                if (a.symbol === 'BNBUSDT') {
+                    resolve(a.baseAssetPrecision);
+                    break;
+                }
+            }
+        });
     }
 
     async getPrice(chain: string, currency: string): Promise<number> {
@@ -51,7 +74,7 @@ export class BinanceService {
                 status: STATUS.ORDER_PLACED,
                 fetchCoinDate: Date.now(),
                 fetchedCoin: false,
-                timestamp: new Date().getTime(),                
+                timestamp: new Date().getTime(),
                 user: user
             }
 
@@ -59,8 +82,9 @@ export class BinanceService {
                 bo = await this.binanceRepo.save(bo);
 
                 const symbol = bo.coin + "USDT";
+                const precision = await this.getPrecision(symbol);
                 const orderReponse: Order = await this.client.order({
-                    quantity: bo.quoteOrderQty + "",
+                    quantity: bo.quoteOrderQty.toFixed(precision),
                     side: bo.side,
                     symbol: symbol,
                     type: 'MARKET',
@@ -125,7 +149,7 @@ export class BinanceService {
                     status: STATUS.ORDER_PLACED,
                     timestamp: new Date().getTime(),
                     fetchCoinDate: Date.now(),
-                    fetchedCoin: false,                    
+                    fetchedCoin: false,
                     user: user
                 }
 
@@ -152,8 +176,9 @@ export class BinanceService {
                                         bo = await this.binanceRepo.save(bo);
                                         const symbol = bo.coin + "USDT";
                                         // post a market order on binance
+                                        const precision = await this.getPrecision(symbol);
                                         const orderReponse: Order = await this.client.order({
-                                            quantity: bo.quantity + "",
+                                            quantity: bo.quantity.toFixed(precision),
                                             side: bo.side,
                                             symbol: symbol,
                                             type: 'MARKET',
