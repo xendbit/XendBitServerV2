@@ -116,7 +116,7 @@ export class UserService {
             } catch (error) {
                 reject(error);
             }
-        });        
+        });
     }
 
     async unstake(sro: StakeRequestObject): Promise<any> {
@@ -131,8 +131,8 @@ export class UserService {
             } catch (error) {
                 reject(error);
             }
-        });        
-    }    
+        });
+    }
 
     async burnable(id: number, wallet: string): Promise<number> {
         return new Promise(async (resolve, reject) => {
@@ -365,7 +365,11 @@ export class UserService {
                 }
 
                 dbUser = this.toUser(uro);
-                const accountName = await this.moneywaveService.verifyBankAccount(uro.accountNumber, uro.bankCode)
+                this.logger.debug(uro);
+                let accountName = "";                
+                if (uro.accountNumber !== "") {
+                    accountName = await this.moneywaveService.verifyBankAccount(uro.accountNumber, uro.bankCode)
+                }
                 dbUser.bankAccountName = accountName;
                 const bitcoinAM = this.btcUtils.getBitcoinAddress(uro.passphrase);
                 bitcoinAM.mnemonicCode = passphraseHash;
@@ -382,11 +386,16 @@ export class UserService {
 
                 const bvn = dbUser.bvn;
                 // TODO : Use the real thing in production
-                const ngncAccountNumber = await this.providusService.createBankAccount(bvn, uro.firstName, uro.surName, uro.middleName, dbUser.email);
+                const ngncAccountNumber = "";//await this.providusService.createBankAccount(bvn, uro.firstName, uro.surName, uro.middleName, dbUser.email);
                 dbUser.ngncAccountNumber = ngncAccountNumber;
                 dbUser.ngncBank = 'Providus Bank';
 
-                dbUser.idImage = await this.imageService.uploadCustomerIdImage(uro.idImage);
+                if(uro.idImage !== undefined && uro.idImage !== "") {
+                    dbUser.idImage = await this.imageService.uploadCustomerIdImage(uro.idImage);
+                } else {
+                    dbUser.idImage = "";
+                }
+
                 dbUser = await this.userRepo.save(dbUser);
                 bitcoinAM.user = dbUser;
                 ethereumAM.user = dbUser;
