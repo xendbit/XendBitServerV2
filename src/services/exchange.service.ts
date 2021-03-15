@@ -33,6 +33,10 @@ export class ExchangeService {
     async usdRate(wallet: string, side: string): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
+                if(wallet.indexOf('st') === 0) {
+                    wallet = wallet.replace('st', '');
+                }
+
                 if (wallet.toUpperCase() === 'USDT') {
                     resolve({
                         'ngnRate': 1,

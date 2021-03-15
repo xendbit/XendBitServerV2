@@ -65,6 +65,9 @@ export class BlockchainService {
                     case 'USDT':
                         resolve(this.ethereumTokensService.history(address, this.config.p.USDT["contract.address"]));
                         break;
+                    case 'BNB':
+                        resolve(this.ethereumTokensService.history(address, this.config.p.BNB["contract.address"]));
+                        break;
                     default:
                         const userToken: UserToken = await this.userTokenRepo.createQueryBuilder("userToken")
                             .where("user_id = :uid", { uid: userId })
@@ -116,7 +119,7 @@ export class BlockchainService {
                 const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain.toLowerCase() === wallet.toLowerCase();
                 });
-                switch(wallet) {
+                switch (wallet) {
                     case 'SNX':
                         resolve(await this.snxService.debtBalance(am));
                 }
