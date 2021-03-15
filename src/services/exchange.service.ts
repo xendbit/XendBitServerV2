@@ -105,12 +105,6 @@ export class ExchangeService {
                 });
 
                 if (await this.ethereumTokenService.checkBalance(usdtAM, tro.amountToSpend)) {
-                    // send usdt to us
-                    const xendAddress = this.config.p["xend.address"];
-                    const trxHash = await this.ethereumTokenService.sendToken(usdtAM, xendAddress, tro.amountToSpend);
-
-                    this.logger.debug(`Send NGNC Hash: ${trxHash}`);
-
                     await this.binanceService.buyTrade(tro, user);
                 }
 

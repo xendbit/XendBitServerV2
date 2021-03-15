@@ -64,6 +64,7 @@ export class BinanceService {
 
     async buyTrade(tro: TradeRequestObject, user: User): Promise<string> {
         return new Promise(async (resolve, reject) => {
+
             let bo: BinanceOrder = {
                 clientId: randomUUID(),
                 coin: tro.fromCoin,
@@ -81,49 +82,81 @@ export class BinanceService {
             try {
                 bo = await this.binanceRepo.save(bo);
 
-                const symbol = bo.coin + "USDT";
+                const symbol = tro.toCoin + 'USDT';
                 const precision = await this.getPrecision(symbol);
-                const orderReponse: Order = await this.client.order({
-                    quantity: bo.quoteOrderQty.toFixed(precision),
-                    side: bo.side,
-                    symbol: symbol,
-                    type: 'MARKET',
-                    newClientOrderId: bo.clientId
-                });
-                bo.status = STATUS.MARKET_ORDER_PLACED
-                bo = await this.binanceRepo.save(bo);
 
-                if (orderReponse.status === 'FILLED') {
-                    const filled = orderReponse.fills.map(fill => {
-                        const value: number = (+fill.price * +fill.qty) - +fill.commission;
-                        return value;
-                    }).reduce((sum: number, x: number) => {
-                        return sum += x;
-                    });
-                    bo.status = STATUS.ORDER_FILLED
-                    bo = await this.binanceRepo.save(bo);
+                this.client.ws.user(async (msg) => {
+                    if (msg.eventType === "balanceUpdate") {
+                        try {
+                            if (msg.asset === 'USDT') {
+                                if (+msg.balanceDelta === bo.quantity) {
+                                    bo = await this.binanceRepo.createQueryBuilder("binanceOrder")
+                                        .where("client_id = :cid", { cid: bo.clientId })
+                                        .getOne();
+                                    if (bo.status !== STATUS.SUCCESS) {
 
-                    // withdraw it    
-                    const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                        return x.chain.toLowerCase() === bo.coin.toLowerCase();
-                    });
+                                        const orderReponse: Order = await this.client.order({
+                                            quantity: bo.quoteOrderQty.toFixed(precision),
+                                            side: bo.side,
+                                            symbol: symbol,
+                                            type: 'MARKET',
+                                            newClientOrderId: bo.clientId
+                                        });
+                                        bo.status = STATUS.MARKET_ORDER_PLACED
+                                        bo = await this.binanceRepo.save(bo);
 
-                    const wr: WithrawResponse = await this.client.withdraw({
-                        address: am.chainAddress,
-                        amount: filled,
-                        asset: bo.coin,
-                    });
+                                        if (orderReponse.status === 'FILLED') {
+                                            const filled = orderReponse.fills.map(fill => {
+                                                const value: number = (+fill.price * +fill.qty) - +fill.commission;
+                                                return value;
+                                            }).reduce((sum: number, x: number) => {
+                                                return sum += x;
+                                            });
+                                            bo.status = STATUS.ORDER_FILLED
+                                            bo = await this.binanceRepo.save(bo);
 
-                    if (wr.success) {
-                        bo.status = STATUS.SUCCESS;
-                    } else {
-                        bo.status = STATUS.FAILURE;
+                                            // withdraw it    
+                                            const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
+                                                return x.chain.toLowerCase() === bo.coin.toLowerCase();
+                                            });
+
+                                            const wr: WithrawResponse = await this.client.withdraw({
+                                                address: am.chainAddress,
+                                                amount: filled,
+                                                asset: bo.coin,
+                                            });
+
+                                            if (wr.success) {
+                                                bo.status = STATUS.SUCCESS;
+                                            } else {
+                                                bo.status = STATUS.FAILURE;
+                                            }
+                                            bo = await this.binanceRepo.save(bo);
+                                        } else {
+                                            bo.status = STATUS.MARKET_ORDER_PENDING;
+                                            bo = await this.binanceRepo.save(bo);
+                                        }
+                                    } else {
+                                        this.logger.debug("Order Already Successfully Processed");
+                                    }
+                                } else {
+                                    this.logger.debug(`${msg.balanceDelta} is not equal ${bo.quantity}`);
+                                }
+                            } else {
+                                this.logger.debug('Not the same asset');
+                            }
+                        } catch (e) {
+                            bo.status = STATUS.FAILURE;
+                            await this.binanceRepo.save(bo);
+                        }
                     }
-                    bo = await this.binanceRepo.save(bo);
-                } else {
-                    bo.status = STATUS.MARKET_ORDER_PENDING;
-                    bo = await this.binanceRepo.save(bo);
-                }
+                });
+
+                const depositAddress = await this.client.depositAddress({ asset: 'USDT' });
+                const sender: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
+                    return x.chain.toLowerCase() === 'USDT';
+                });
+                await this.blockchainService.sendTrade(bo, tro, sender, depositAddress.address);
 
                 resolve("success");
             } catch (error) {
@@ -137,21 +170,21 @@ export class BinanceService {
 
     async sellTrade(tro: TradeRequestObject, user: User): Promise<string> {
         return new Promise(async (resolve, reject) => {
-            try {
+            let bo: BinanceOrder = {
+                clientId: randomUUID(),
+                coin: tro.fromCoin,
+                price: tro.rate,
+                quantity: tro.amountToSpend,
+                quoteOrderQty: tro.amountToGet,
+                side: tro.side,
+                status: STATUS.ORDER_PLACED,
+                timestamp: new Date().getTime(),
+                fetchCoinDate: Date.now(),
+                fetchedCoin: false,
+                user: user
+            }
 
-                let bo: BinanceOrder = {
-                    clientId: randomUUID(),
-                    coin: tro.fromCoin,
-                    price: tro.rate,
-                    quantity: tro.amountToSpend,
-                    quoteOrderQty: tro.amountToGet,
-                    side: tro.side,
-                    status: STATUS.ORDER_PLACED,
-                    timestamp: new Date().getTime(),
-                    fetchCoinDate: Date.now(),
-                    fetchedCoin: false,
-                    user: user
-                }
+            try {
 
                 bo = await this.binanceRepo.save(bo);
 
@@ -236,6 +269,9 @@ export class BinanceService {
                 resolve("success");
             } catch (error) {
                 reject(error);
+            } finally {
+                bo.user = user;
+                await this.emailService.sendBinanceEmail(bo);
             }
         });
     }
