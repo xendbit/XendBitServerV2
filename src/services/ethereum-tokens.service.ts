@@ -108,6 +108,7 @@ export class EthereumTokensService {
     getGenericToken(ethAM: AddressMapping, chain: string, decimals: number, contractAddress: string): AddressMapping {
         const am: AddressMapping = { ...ethAM };
         am.chain = chain;
+        am.chainAddress = ethAM.chainAddress;
         am.fees = {
             minXendFees: this.config.p["USDT"]["min.xend.fees"],
             minBlockFees: this.config.p["USDT"]["min.block.fees"],
@@ -178,7 +179,7 @@ export class EthereumTokensService {
                 let amountIsh = (amount * (10 ** decimals)).toLocaleString();
                 amountIsh = amountIsh.split(',').join('');
                 const amountHex = this.web3.utils.toHex(amountIsh);
-                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(this.web3, sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
 
                 var rawTransaction: TxData = {
@@ -208,7 +209,7 @@ export class EthereumTokensService {
                 let amountIsh = (amount * (10 ** decimals)).toLocaleString();
                 amountIsh = amountIsh.split(',').join('');
                 const amountHex = this.web3.utils.toHex(amountIsh);
-                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(this.web3, sender.chainAddress);
                 const contract = new this.web3.eth.Contract(this.erc20Abi, sender.fees.contractAddress, { from: sender.chainAddress });
 
                 var rawTransaction: TxData = {

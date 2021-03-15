@@ -62,7 +62,7 @@ export class EthereumService {
     async send(sender: AddressMapping, recipient: string, amount: number, xendFees: number, blockFees: number): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(this.web3, sender.chainAddress);
 
                 var rawTransaction: TxData = {
                     gasPrice: this.web3.utils.toHex(process.env.GAS_PRICE),

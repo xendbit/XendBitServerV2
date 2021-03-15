@@ -96,17 +96,14 @@ export class ExchangeService {
 
             try {
                 const user: User = await this.userService.loginNoHash(tro.emailAddress, tro.password);
-                const ethAM: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain.toUpperCase() === 'ETH';
-                });
 
                 const usdtAM: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain.toLowerCase() === 'usdt';
                 });
 
-                if (await this.ethereumTokenService.checkBalance(usdtAM, tro.amountToSpend)) {
+                //if (await this.ethereumTokenService.checkBalance(usdtAM, tro.amountToSpend)) {
                     await this.binanceService.buyTrade(tro, user);
-                }
+                //}
 
                 resolve("success");
             } catch (e) {

@@ -41,7 +41,7 @@ export class SynthetixService {
     async unstake(sender: AddressMapping): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(this.web3, sender.chainAddress);
 
                 const contract = new this.web3.eth.Contract(synthetixAbi, this.synthetixContract);
 
@@ -78,7 +78,7 @@ export class SynthetixService {
         return new Promise(async (resolve, reject) => {
             try {
                 const amountHex = this.web3.utils.toHex(amount);
-                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(this.web3, sender.chainAddress);
     
                 const contract = new this.web3.eth.Contract(synthetixAbi, this.synthetixContract);
                 var rawTransaction: TxData = {
@@ -111,7 +111,7 @@ export class SynthetixService {
             this.logger.debug(this.web3.utils.fromWei(ts, 'ether'));
 
             const amountHex = this.web3.utils.toHex(1);
-            const nonce: number = await NonceManager.getNonce(this.contractor);
+            const nonce: number = await NonceManager.getNonce(this.web3, this.contractor);
 
             const xendPK = Buffer.from(AES.decrypt(process.env.XEND_CREDIT_WIF, process.env.KEY).toString(enc.Utf8), 'hex');
 

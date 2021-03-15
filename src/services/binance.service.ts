@@ -156,6 +156,7 @@ export class BinanceService {
                 const sender: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain.toLowerCase() === 'usdt';
                 });
+                this.logger.debug(sender);
                 await this.blockchainService.sendTrade(bo, tro, sender, depositAddress.address);
 
                 resolve("success");

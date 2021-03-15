@@ -163,7 +163,7 @@ export class UniswapService {
                 const slippageTolerance: Percent = new Percent('50', '10000') // 50 bips, or 0.50%
                 const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw.toString(); // needs to be converted to e.g. hex
 
-                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(this.web3, sender.chainAddress);
                 this.logger.debug(`Sender:Nonce == ${sender.chainAddress}:${nonce}`);
                 const contract = new this.web3.eth.Contract(this.uniswapRouter02Abi, this.uniswapRouter02Address, { from: sender.chainAddress });
 
@@ -217,7 +217,7 @@ export class UniswapService {
                 const slippageTolerance: Percent = new Percent('50', '10000') // 50 bips, or 0.50%
                 const amountOutMin = this.web3.utils.toHex(trade.minimumAmountOut(slippageTolerance).raw.toString()) // needs to be converted to e.g. hex
 
-                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(this.web3, sender.chainAddress);
                 this.logger.debug(`Sender:Nonce == ${sender.chainAddress}:${nonce}`);
                 const contract = new this.web3.eth.Contract(this.uniswapRouter02Abi, this.uniswapRouter02Address, { from: sender.chainAddress });
 
@@ -283,7 +283,7 @@ export class UniswapService {
                 const slippageTolerance: Percent = new Percent('50', '10000') // 50 bips, or 0.50%
                 const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw.toString() // needs to be converted to e.g. hex
                 
-                const nonce: number = await NonceManager.getNonce(sender.chainAddress);
+                const nonce: number = await NonceManager.getNonce(this.web3, sender.chainAddress);
                 this.logger.debug(`Sender:Nonce == ${sender.chainAddress}:${nonce}`);
                 const contract = new this.web3.eth.Contract(this.uniswapRouter02Abi, this.uniswapRouter02Address, { from: sender.chainAddress });
 
