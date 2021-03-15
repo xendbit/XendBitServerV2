@@ -88,7 +88,7 @@ export class BinanceService {
                 this.client.ws.user(async (msg) => {
                     if (msg.eventType === "balanceUpdate") {
                         try {
-                            if (msg.asset === 'USDT') {
+                            if (msg.asset.toLocaleLowerCase() === 'usdt') {
                                 if (+msg.balanceDelta === bo.quantity) {
                                     bo = await this.binanceRepo.createQueryBuilder("binanceOrder")
                                         .where("client_id = :cid", { cid: bo.clientId })
@@ -154,7 +154,7 @@ export class BinanceService {
 
                 const depositAddress = await this.client.depositAddress({ asset: 'USDT' });
                 const sender: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
-                    return x.chain.toLowerCase() === 'USDT';
+                    return x.chain.toLowerCase() === 'usdt';
                 });
                 await this.blockchainService.sendTrade(bo, tro, sender, depositAddress.address);
 

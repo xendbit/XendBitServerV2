@@ -37,7 +37,7 @@ export class ExchangeService {
                     wallet = wallet.replace('st', '');
                 }
 
-                if (wallet.toUpperCase() === 'USDT') {
+                if (wallet.toLocaleLowerCase() === 'usdt') {
                     resolve({
                         'ngnRate': 1,
                         'usdRate': 1,
