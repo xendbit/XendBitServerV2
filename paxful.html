@@ -1,0 +1,13 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/hmac-sha256.js"></script>
+<script>
+    var xhr = new XMLHttpRequest(),
+        secret = 'pdQ2MGFpndEXv8K7qRZCkBXoR4Pl91X1',
+        body = 'apikey=' + '0npX1NDnPz0hblxKsmNhgWy8Lir60owv' + '&nonce=' + Date.now() + '&offer_hash=Agq1Bpw7oX9&margin=50';
+
+    var seal = CryptoJS.HmacSHA256(body, secret);
+
+    xhr.open('POST', 'https://www.paxful.com/api/offer/list');
+    xhr.setRequestHeader('Content-Type', 'text/plain');
+    xhr.setRequestHeader('Accept', 'application/json');  
+    xhr.send(body + '&apiseal=' + seal);    
+</script>

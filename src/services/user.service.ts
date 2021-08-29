@@ -352,21 +352,25 @@ export class UserService {
                     reject("User with email address already exists");
                 }
 
-                dbUser = await this.findByColumn("PHONE_NUMBER", uro.phoneNumber);
-                if (dbUser !== undefined) {
-                    // user already exists
-                    reject("User with phone number already exists");
+                if (uro.phoneNumber !== undefined && uro.phoneNumber.length >= 11) {
+                    dbUser = await this.findByColumn("PHONE_NUMBER", uro.phoneNumber);
+                    if (dbUser !== undefined) {
+                        // user already exists
+                        reject("User with phone number already exists");
+                    }
                 }
 
-                dbUser = await this.findByColumn("bank_account_number", uro.accountNumber);
-                if (dbUser !== undefined) {
-                    // user already exists
-                    reject("User with account number already exists");
+                if (uro.accountNumber !== undefined && uro.accountNumber.length >= 10) {
+                    dbUser = await this.findByColumn("bank_account_number", uro.accountNumber);
+                    if (dbUser !== undefined) {
+                        // user already exists
+                        reject("User with account number already exists");
+                    }
                 }
 
                 dbUser = this.toUser(uro);
                 this.logger.debug(uro);
-                let accountName = "";                
+                let accountName = "";
                 if (uro.accountNumber !== "") {
                     accountName = await this.moneywaveService.verifyBankAccount(uro.accountNumber, uro.bankCode)
                 }
@@ -390,7 +394,7 @@ export class UserService {
                 dbUser.ngncAccountNumber = ngncAccountNumber;
                 dbUser.ngncBank = 'Providus Bank';
 
-                if(uro.idImage !== undefined && uro.idImage !== "") {
+                if (uro.idImage !== undefined && uro.idImage !== "") {
                     dbUser.idImage = await this.imageService.uploadCustomerIdImage(uro.idImage);
                 } else {
                     dbUser.idImage = "";
@@ -434,7 +438,7 @@ export class UserService {
             idImage: uro.idImage !== undefined ? uro.idImage : '',
             idNumber: uro.idNumber !== undefined ? uro.idNumber : '',
             idType: uro.idType !== undefined ? uro.idType : '',
-            isActivated: false,
+            isActivated: true,
             isApproved: true,
             isBeneficiary: true,
             phoneNumber: uro.phoneNumber !== undefined ? uro.phoneNumber : '',

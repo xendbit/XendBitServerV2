@@ -17,37 +17,40 @@ export class PaxfulService {
         this.httpService = new HttpClient('Providus API');
         this.apiKey = process.env.PAXFUL_KEY;
         this.apiSecret = process.env.PAXFUL_SECRET;
+        this.logger.debug(this.apiKey);
+        this.logger.debug(this.apiSecret);
         this.baseUrl = process.env.PAXFUL_URL;
-        //this.listOffers('buy');
+        this.listOffers('buy');
     }
 
     async listOffers(offerType: string): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
+                let searchParams: Record<string, string> = {
+                    "active": "true",
+                    "nonce": Date.now() + "",
+                    "offer_type": "buy",
+                    "apikey": this.apiKey
+                };
 
+                searchParams = {
+                    ...searchParams,
+                    ...{ apiseal: HmacSHA256(new URLSearchParams(searchParams).toString(), this.apiSecret).toString(enc.Hex) }
+                }
+
+                const payload = new URLSearchParams(searchParams).toString();
+                
                 let url = this.baseUrl + "/offer/list";
-                const keys = ['active', 'offer_type'];
-                const values = ['true', offerType];
-                const seal = this.getRequestBody(keys, values);
 
                 const headers: IHeaders = {
                     "content-type": "text/plain",
                     "Accept": "application/json; version=1"
                 };
 
-                const fields = {
-                    "active": true,
-                    "offer_type": offerType,
-                    "apiKey": this.apiKey,
-                    "nonce": Date.now(),
-                    "apiseal": seal
-                }
-
-                const postData = JSON.stringify(fields);
-
                 this.logger.debug(url);
-                this.logger.debug(postData);
-                const res = await this.httpService.post(url, postData, headers);
+                this.logger.debug(payload);
+                //const rb = "apikey=0npX1NDnPz0hblxKsmNhgWy8Lir60owv&nonce=1616420854486&active=true&offer_type=buy&apiseal=4067441dc8c84575b80c5fc6ceb0d63d546fc4c0d01da4c748b526c1093a8a58";
+                const res = await this.httpService.post(url, payload, headers);
                 this.logger.debug("Posted URL");
                 this.logger.debug(res.message.statusCode);
                 if (res.message.statusCode === 200) {
@@ -75,6 +78,6 @@ export class PaxfulService {
         }
 
         const seal = HmacSHA256(body, this.apiSecret).toString(enc.Hex);
-        return seal;//body + "&apiSeal=" + seal;
+        return body + "&apiSeal=" + seal;
     }
 }

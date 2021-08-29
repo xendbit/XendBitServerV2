@@ -88,6 +88,9 @@ export class BinanceService {
                 this.client.ws.user(async (msg) => {
                     if (msg.eventType === "balanceUpdate") {
                         try {
+                            this.logger.debug(`Asset: ` + msg.asset);
+                            this.logger.debug(`Balance: ` + msg.balanceDelta);
+                            this.logger.debug(`Quantity: ` + bo.quantity);
                             if (msg.asset.toLocaleLowerCase() === 'usdt') {
                                 if (+msg.balanceDelta === bo.quantity) {
                                     bo = await this.binanceRepo.createQueryBuilder("binanceOrder")
@@ -200,6 +203,9 @@ export class BinanceService {
                 this.client.ws.user(async (msg) => {
                     if (msg.eventType === "balanceUpdate") {
                         try {
+                            this.logger.debug(`Asset: ` + msg.asset);
+                            this.logger.debug(`Balance: ` + msg.balanceDelta);
+                            this.logger.debug(`Quantity: ` + bo.quantity);
                             if (msg.asset === tro.fromCoin) {
                                 if (+msg.balanceDelta === bo.quantity) {
                                     bo = await this.binanceRepo.createQueryBuilder("binanceOrder")
