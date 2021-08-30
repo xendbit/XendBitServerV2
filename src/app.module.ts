@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { Grouplists } from './models/grouplists.entity';
 import { User } from './models/user.entity';
 import { APP_GUARD } from '@nestjs/core';
@@ -60,13 +58,12 @@ require('dotenv').config();
       },
     }), 
   ],
-  controllers: [AppController, GrouplistsController, UserController, ExchangeController, DefiController],
+  controllers: [GrouplistsController, UserController, ExchangeController, DefiController],
   providers: [
     {
       provide: APP_GUARD,
       useClass: AuthGuard
     },
-    AppService,
     GrouplistsService,
     UserService,
     MoneyWaveService,

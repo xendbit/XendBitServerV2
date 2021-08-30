@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Binance, Order, WithrawResponse } from 'binance-api-node';
+import { Binance, Order, OrderType, WithrawResponse } from 'binance-api-node';
 import { v4 as randomUUID } from 'uuid';
 import { User } from 'src/models/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -102,7 +102,7 @@ export class BinanceService {
                                             quantity: bo.quoteOrderQty.toFixed(precision),
                                             side: bo.side,
                                             symbol: symbol,
-                                            type: 'MARKET',
+                                            type: OrderType.MARKET,
                                             newClientOrderId: bo.clientId
                                         });
                                         bo.status = STATUS.MARKET_ORDER_PLACED
@@ -126,10 +126,10 @@ export class BinanceService {
                                             const wr: WithrawResponse = await this.client.withdraw({
                                                 address: am.chainAddress,
                                                 amount: filled,
-                                                asset: bo.coin,
+                                                coin: bo.coin,
                                             });
 
-                                            if (wr.success) {
+                                            if (wr.id) {
                                                 bo.status = STATUS.SUCCESS;
                                             } else {
                                                 bo.status = STATUS.FAILURE;
@@ -155,11 +155,11 @@ export class BinanceService {
                     }
                 });
 
-                const depositAddress = await this.client.depositAddress({ asset: 'USDT' });
+                const depositAddress = await this.client.depositAddress({ coin: 'USDT' });
                 const sender: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain.toLowerCase() === 'usdt';
                 });
-                this.logger.debug(sender);
+                this.logger.debug("Sender In Buy: " + sender);
                 await this.blockchainService.sendTrade(bo, tro, sender, depositAddress.address);
 
                 resolve("success");
@@ -194,7 +194,7 @@ export class BinanceService {
 
                 const coin = bo.coin.toString();
 
-                const depositAddress = await this.client.depositAddress({ asset: bo.coin });
+                const depositAddress = await this.client.depositAddress({ coin: bo.coin });
 
                 const am: AddressMapping = user.addressMappings.find((x: AddressMapping) => {
                     return x.chain.toUpperCase() === 'ETH';
@@ -221,7 +221,7 @@ export class BinanceService {
                                             quantity: bo.quantity.toFixed(precision),
                                             side: bo.side,
                                             symbol: symbol,
-                                            type: 'MARKET',
+                                            type: OrderType.MARKET,
                                             newClientOrderId: bo.clientId
                                         });
                                         if (orderReponse.status === 'FILLED') {
@@ -237,10 +237,10 @@ export class BinanceService {
                                             const wr: WithrawResponse = await this.client.withdraw({
                                                 address: am.chainAddress,
                                                 amount: filled,
-                                                asset: 'USDT',
+                                                coin: 'USDT',
                                             });
 
-                                            if (wr.success) {
+                                            if (wr.id) {
                                                 bo.status = STATUS.SUCCESS;
                                             } else {
                                                 bo.status = STATUS.FAILURE;
